@@ -49,6 +49,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private lateinit var shelfName: TextView
     private lateinit var stats: TextView
     private lateinit var weatherView: TextView
+    private lateinit var outlookView: TextView
     private lateinit var wordWelcome: TextView
     private lateinit var wordJacob: TextView
     private lateinit var wordStatus: TextView
@@ -96,6 +97,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         shelfName = findViewById(R.id.shelfName)
         stats = findViewById(R.id.stats)
         weatherView = findViewById(R.id.weather)
+        outlookView = findViewById(R.id.outlook)
         wordWelcome = findViewById(R.id.wordWelcome)
         wordJacob = findViewById(R.id.wordJacob)
         wordStatus = findViewById(R.id.wordStatus)
@@ -779,9 +781,22 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 val temp = Regex("\"temperature\":(\\d+)").find(body)?.groupValues?.get(1) ?: return@runCatching ""
                 val words = Regex("\"shortForecast\":\"([^\"]+)\"").find(body)?.groupValues?.get(1) ?: "WEATHER"
                 val label = words.split(" ").take(2).joinToString(" ").uppercase(Locale.US)
-                "$temp° $label"
+                val names = Regex("\"name\":\"([^\"]+)\"").findAll(body).map { it.groupValues[1] }.toList()
+                val temps = Regex("\"temperature\":(\\d+)").findAll(body).map { it.groupValues[1] }.toList()
+                val peek = names.zip(temps).filter { (name, _) ->
+                    !name.contains("night", true)
+                }.take(3).joinToString("  ") { (name, value) ->
+                    val short = if (name.startsWith("This", true)) "TODAY" else name.take(3).uppercase(Locale.US)
+                    "$short $value°"
+                }
+                "$temp° $label|$peek"
             }.getOrDefault("")
-            if (line.isNotEmpty()) runOnUiThread { if (!isFinishing) weatherView.text = line }
+            if (line.isNotEmpty()) runOnUiThread {
+                if (isFinishing) return@runOnUiThread
+                val parts = line.split("|")
+                weatherView.text = parts[0]
+                outlookView.text = parts.getOrElse(1) { "" }
+            }
         }.start()
     }
 
