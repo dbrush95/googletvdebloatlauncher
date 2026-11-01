@@ -80,7 +80,8 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private var apps: List<AppEntry> = emptyList()
     private var dockPkgs: MutableList<String> = mutableListOf()
     private var menuEntry: AppEntry? = null
-    private var menuOnDock = false
+    private var inputLayer: View? = null
+    private var dismissInputs: ((Boolean) -> Unit)? = null
 
     private val endWelcome = Runnable { finishWelcome() }
     private val showDream = Runnable { showScreensaver() }
@@ -222,6 +223,10 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
         if (welcome.visibility == View.VISIBLE && (ok || back)) {
             finishWelcome()
+            return true
+        }
+        if (inputLayer != null && back) {
+            closeInputs(save = true)
             return true
         }
         if (about.visibility == View.VISIBLE && back) {
@@ -539,8 +544,19 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     }
 
     private fun showInputEditor() {
+        closeInputs(save = false)
+        coverHome()
         val marks = listOf("ps5", "xbox", "switch", "pc", "cable", "disc", "live")
         val ports = listOf("HDMI 1", "HDMI 2", "HDMI 3", "HDMI 4", "AV", "Tuner")
+        fun markName(id: String) = when (id) {
+            "ps5" -> "PS5"
+            "xbox" -> "Xbox"
+            "switch" -> "Switch"
+            "pc" -> "PC"
+            "cable" -> "Cable"
+            "disc" -> "Disc"
+            else -> "Live"
+        }
         val raw = prefs.getString(KEY_INPUTS, "PS5|ps5|HDMI 1,Xbox|xbox|HDMI 2,Switch|switch|HDMI 3,PC|pc|HDMI 4,Cable|cable|AV") ?: ""
         val slots = raw.split(",").mapIndexedNotNull { index, item ->
             val parts = item.split("|")
@@ -550,46 +566,75 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
         val root = window.decorView as ViewGroup
         val layer = android.widget.FrameLayout(this)
-        layer.setBackgroundColor(0x6605070B.toInt())
-        layer.setOnClickListener {
-            root.removeView(layer)
-            revealHome()
-            focusDock()
-        }
+        layer.setBackgroundColor(0xFF05070B.toInt())
+        layer.isClickable = true
+        val pad = (16 * resources.displayMetrics.density).toInt()
         val card = LinearLayout(this)
         card.orientation = LinearLayout.VERTICAL
         card.setBackgroundResource(R.drawable.bg_card)
-        val pad = (24 * resources.displayMetrics.density).toInt()
-        card.setPadding(pad, pad, pad, pad)
-        card.setOnClickListener { }
+        card.setPadding(pad * 2, pad * 2, pad * 2, pad * 2)
+        card.isClickable = true
         val title = TextView(this)
         title.text = "INPUTS"
         title.setTextColor(resources.getColor(R.color.cyan))
-        title.letterSpacing = 0.3f
+        title.letterSpacing = 0.36f
+        title.textSize = 14f
         card.addView(title)
+        val hint = TextView(this)
+        hint.text = "Move with the remote. OK changes that item. Back closes."
+        hint.setTextColor(resources.getColor(R.color.muted))
+        hint.textSize = 14f
+        hint.setPadding(0, pad / 2, 0, pad)
+        card.addView(hint)
         val names = mutableListOf<EditText>()
         val badges = mutableListOf<TextView>()
         val portViews = mutableListOf<TextView>()
+        fun chip(label: String): TextView {
+            val view = TextView(this)
+            view.text = label
+            view.setBackgroundResource(R.drawable.bg_button)
+            view.setTextColor(resources.getColorStateList(R.color.button_text))
+            view.gravity = android.view.Gravity.CENTER
+            view.isFocusable = true
+            view.isClickable = true
+            view.minWidth = (88 * resources.displayMetrics.density).toInt()
+            view.minHeight = (48 * resources.displayMetrics.density).toInt()
+            view.setPadding(pad, 0, pad, 0)
+            view.textSize = 16f
+            return view
+        }
+        var first: View? = null
         slots.forEach { slot ->
             val row = LinearLayout(this)
             row.orientation = LinearLayout.HORIZONTAL
             row.gravity = android.view.Gravity.CENTER_VERTICAL
-            val badge = TextView(this)
-            badge.text = slot.second
-            badge.setTextColor(resources.getColor(R.color.gold))
-            badge.setPadding(pad / 2, pad / 2, pad / 2, pad / 2)
+            row.setPadding(0, pad / 3, 0, pad / 3)
+            val badge = chip(markName(slot.second))
+            badge.tag = slot.second
             badge.setOnClickListener {
-                val index = marks.indexOf(badge.text.toString())
-                badge.text = marks[if (index < 0) 0 else (index + 1) % marks.size]
+                val index = marks.indexOf(badge.tag?.toString())
+                val next = marks[if (index < 0) 0 else (index + 1) % marks.size]
+                badge.tag = next
+                badge.text = markName(next)
             }
             val name = EditText(this)
             name.setText(slot.first)
-            name.setTextColor(resources.getColor(R.color.fg))
-            name.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            val port = TextView(this)
-            port.text = slot.third
-            port.setTextColor(resources.getColor(R.color.cyan))
-            port.setPadding(pad / 2, pad / 2, pad / 2, pad / 2)
+            name.setSingleLine(true)
+            name.setTextColor(resources.getColor(R.color.gold))
+            name.setHintTextColor(resources.getColor(R.color.muted))
+            name.hint = "Name"
+            name.background = null
+            name.setBackgroundResource(R.drawable.bg_button)
+            name.gravity = android.view.Gravity.CENTER
+            name.isFocusable = true
+            name.isFocusableInTouchMode = true
+            name.setPadding(pad, 0, pad, 0)
+            name.minHeight = (48 * resources.displayMetrics.density).toInt()
+            name.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply {
+                marginStart = pad / 2
+                marginEnd = pad / 2
+            }
+            val port = chip(slot.third)
             port.setOnClickListener {
                 val index = ports.indexOf(port.text.toString())
                 port.text = ports[if (index < 0) 0 else (index + 1) % ports.size]
@@ -598,12 +643,10 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 openMappedInput(port.text.toString())
                 true
             }
-            val bar = TextView(this)
-            bar.text = "BAR"
-            bar.setTextColor(resources.getColor(R.color.gold))
-            bar.setPadding(pad / 2, pad / 2, pad / 2, pad / 2)
+            val bar = chip("Dock")
             bar.setOnClickListener {
-                pinInput(name.text.toString(), badge.text.toString(), port.text.toString())
+                pinInput(name.text.toString(), badge.tag?.toString() ?: "live", port.text.toString())
+                bar.text = "Added"
             }
             row.addView(badge)
             row.addView(name)
@@ -613,26 +656,49 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             names += name
             badges += badge
             portViews += port
+            if (first == null) first = badge
         }
-        val done = TextView(this)
-        done.text = "DONE"
-        done.setTextColor(resources.getColor(R.color.gold))
+        val done = chip("Done")
         done.setPadding(0, pad, 0, 0)
-        done.setOnClickListener {
-            val encoded = names.indices.joinToString(",") { i -> "${names[i].text}|${badges[i].text}|${portViews[i].text}" }
-            prefs.edit().putString(KEY_INPUTS, encoded).apply()
-            root.removeView(layer)
+        val dismiss = { save: Boolean ->
+            if (save) {
+                val encoded = names.indices.joinToString(",") { i ->
+                    "${names[i].text}|${badges[i].tag}|${portViews[i].text}"
+                }
+                prefs.edit().putString(KEY_INPUTS, encoded).apply()
+            }
+            (layer.parent as? ViewGroup)?.removeView(layer)
+            if (inputLayer == layer) inputLayer = null
+            dismissInputs = null
+            revealHome()
+            focusDock()
         }
+        dismissInputs = dismiss
+        done.setOnClickListener { dismiss(true) }
         card.addView(done)
         val cardParams = android.widget.FrameLayout.LayoutParams(
             android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
-            android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
         )
-        cardParams.gravity = android.view.Gravity.CENTER
-        cardParams.leftMargin = pad
-        cardParams.rightMargin = pad
+        cardParams.setMargins(pad * 2, pad * 2, pad * 2, pad * 2)
         layer.addView(card, cardParams)
+        inputLayer = layer
         root.addView(layer)
+        layer.post { first?.requestFocus() }
+    }
+
+    private fun closeInputs(save: Boolean) {
+        val dismiss = dismissInputs
+        if (dismiss != null) {
+            dismissInputs = null
+            dismiss(save)
+            return
+        }
+        val layer = inputLayer ?: return
+        (layer.parent as? ViewGroup)?.removeView(layer)
+        inputLayer = null
+        revealHome()
+        focusDock()
     }
 
     private fun pinInput(name: String, mark: String, port: String) {
