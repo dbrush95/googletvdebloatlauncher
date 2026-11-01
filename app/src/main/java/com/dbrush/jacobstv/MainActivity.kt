@@ -5,7 +5,13 @@ import android.app.ActivityManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.ToneGenerator
@@ -109,6 +115,9 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         menuPin = findViewById(R.id.menuPin)
         libraryAdapter = AppsAdapter({ open(it) }, { showMenu(it, onDock = false) })
         grid.adapter = libraryAdapter
+        grid.setOnItemClickListener { _, _, position, _ ->
+            open(libraryAdapter.getItem(position))
+        }
         grid.setOnItemLongClickListener { _, _, position, _ ->
             showMenu(libraryAdapter.getItem(position), onDock = false)
             true
@@ -203,6 +212,11 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             hideDebloat()
             return true
         }
+        if (control.visibility == View.VISIBLE && back) {
+            control.visibility = View.GONE
+            focusDock()
+            return true
+        }
         if (library.visibility == View.VISIBLE && back) {
             hideLibrary()
             return true
@@ -252,6 +266,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             menu.visibility != View.VISIBLE &&
             debloat.visibility != View.VISIBLE &&
             library.visibility != View.VISIBLE &&
+            control.visibility != View.VISIBLE &&
             dream.visibility != View.VISIBLE
     }
 
@@ -355,7 +370,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         library.translationY = 80f
         library.animate().translationY(0f).setDuration(220).start()
         grid.setSelection(0)
-        grid.requestFocus()
+        grid.post { grid.requestFocus() }
         showShelf(getString(R.string.all_apps), getString(R.string.all_apps))
     }
 
@@ -650,9 +665,18 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private fun refreshApps() {
         val gen = ++loadGen
         Thread {
-            val next = queryApps()
+            val found = queryApps()
             runOnUiThread {
                 if (gen != loadGen || isFinishing) return@runOnUiThread
+                val next = found.map { info ->
+                    val activity = info.activityInfo
+                    AppEntry(
+                        label = info.loadLabel(packageManager)?.toString()?.takeIf { it.isNotBlank() } ?: activity.packageName,
+                        kind = TileKind.APP,
+                        icon = appIcon(packageManager, info),
+                        component = ComponentName(activity.packageName, activity.name),
+                    )
+                }.sortedBy { it.label.lowercase(Locale.US) }
                 val browser = AppEntry("Browser", TileKind.BROWSER, getDrawable(R.drawable.ic_web), null)
                 apps = listOf(browser) + next
                 libraryAdapter.setItems(apps)
@@ -979,7 +1003,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
     }
 
-    private fun queryApps(): List<AppEntry> {
+    private fun queryApps(): List<ResolveInfo> {
         val pm = packageManager
         val byPackage = LinkedHashMap<String, ResolveInfo>()
         fun collect(category: String) {
@@ -995,15 +1019,38 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
         collect(Intent.CATEGORY_LEANBACK_LAUNCHER)
         collect(Intent.CATEGORY_LAUNCHER)
-        return byPackage.values.map { info ->
-            val activity = info.activityInfo
-            AppEntry(
-                label = info.loadLabel(pm)?.toString()?.takeIf { it.isNotBlank() } ?: activity.packageName,
-                kind = TileKind.APP,
-                icon = runCatching { info.loadIcon(pm) }.getOrNull(),
-                component = ComponentName(activity.packageName, activity.name),
-            )
-        }.sortedBy { it.label.lowercase(Locale.US) }
+        return byPackage.values.toList()
+    }
+
+    private fun appIcon(pm: PackageManager, info: ResolveInfo): Drawable {
+        val activity = info.activityInfo
+        val loaded = listOfNotNull(
+            runCatching { if (activity.icon != 0) activity.loadIcon(pm) else null }.getOrNull(),
+            runCatching { if (activity.applicationInfo.icon != 0) activity.applicationInfo.loadIcon(pm) else null }.getOrNull(),
+            runCatching { activity.loadBanner(pm) }.getOrNull(),
+            runCatching { info.loadIcon(pm) }.getOrNull(),
+        ).firstOrNull { it.intrinsicWidth > 0 && it.intrinsicHeight > 0 }
+        if (loaded != null) return loaded
+        val label = info.loadLabel(pm)?.toString()?.takeIf { it.isNotBlank() } ?: activity.packageName
+        return letterIcon(MARKS[activity.packageName] ?: label.take(2).uppercase(Locale.US), activity.packageName)
+    }
+
+    private fun letterIcon(mark: String, key: String): Drawable {
+        val size = (72 * resources.displayMetrics.density).toInt().coerceAtLeast(72)
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        val hue = (key.hashCode() and 0xFF) / 255f * 40f
+        paint.color = android.graphics.Color.HSVToColor(255, floatArrayOf(190f + hue, 0.45f, 0.18f))
+        val radius = size * 0.18f
+        canvas.drawRoundRect(0f, 0f, size.toFloat(), size.toFloat(), radius, radius, paint)
+        paint.color = 0xFF5FD0E6.toInt()
+        paint.textAlign = Paint.Align.CENTER
+        paint.textSize = size * (if (mark.length > 2) 0.28f else 0.42f)
+        val bounds = android.graphics.Rect()
+        paint.getTextBounds(mark, 0, mark.length, bounds)
+        canvas.drawText(mark, size / 2f, size / 2f - bounds.exactCenterY(), paint)
+        return BitmapDrawable(resources, bitmap)
     }
 
     companion object {
@@ -1014,6 +1061,20 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         private const val KEY_INPUTS = "inputs"
         private const val KEY_QUIET = "quiet"
         private const val KEY_BROWSER = "browserOffered"
+        private val MARKS = mapOf(
+            "com.netflix.ninja" to "N",
+            "com.google.android.youtube.tv" to "YT",
+            "com.google.android.youtube" to "YT",
+            "com.amazon.amazonvideo.livingroom" to "P",
+            "com.disney.disneyplus" to "D+",
+            "com.android.vending" to ">",
+            "com.nvidia.geforcenow" to "GFN",
+            "com.limelight" to "M",
+            "org.xbmc.kodi" to "K",
+            "com.apple.atve.androidtv.appletv" to "tv+",
+            "com.cbs.ott" to "P+",
+            "com.spotify.tv.android" to "S",
+        )
         private val PREFERRED = listOf(
             "com.netflix.ninja",
             "com.google.android.youtube.tv",

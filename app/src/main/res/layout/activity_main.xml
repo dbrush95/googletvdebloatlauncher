@@ -215,7 +215,9 @@
                 android:columnWidth="148dp"
                 android:gravity="center"
                 android:horizontalSpacing="14dp"
-                android:listSelector="@android:color/transparent"
+                android:drawSelectorOnTop="true"
+                android:focusable="true"
+                android:listSelector="@drawable/bg_grid"
                 android:numColumns="auto_fit"
                 android:stretchMode="columnWidth"
                 android:verticalSpacing="14dp" />
@@ -553,7 +555,7 @@
         android:id="@+id/control"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#4402070C"
+        android:background="#E605070B"
         android:clickable="true"
         android:visibility="gone">
 
