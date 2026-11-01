@@ -831,7 +831,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private fun showDebloat() {
         val found = debloatTargets()
         val saved = prefs.getStringSet(KEY_QUIET, emptySet()) ?: emptySet()
-        val home = if (isOurHome()) "Jacob's TV is Home." else "Stock launcher stays until this app is Home."
+        val home = if (isOurHome()) "This app is Home." else "Stock launcher stays until this app is Home."
         debloatBody.text = buildString {
             append("Disable only. Nothing is uninstalled. Cast and setup stay on. ")
             append(home)
@@ -958,7 +958,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         val conn = URL(address).openConnection() as HttpURLConnection
         conn.connectTimeout = 4000
         conn.readTimeout = 4000
-        conn.setRequestProperty("User-Agent", "JacobsTV/1.0 (dbrush95/jacobstv)")
+        conn.setRequestProperty("User-Agent", "Home/1.0 (dbrush95/googletvdebloatlauncher)")
         conn.setRequestProperty("Accept", "application/geo+json")
         val body = conn.inputStream.bufferedReader().use { it.readText() }
         conn.disconnect()

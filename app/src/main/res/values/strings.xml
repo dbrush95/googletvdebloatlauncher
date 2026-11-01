@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Jacob\'s TV</string>
-    <string name="header_name">JACOB</string>
+    <string name="app_name">Home</string>
+    <string name="header_name">HOME</string>
     <string name="header_tag">Low bloat  ·  no ads</string>
     <string name="welcome">WELCOME</string>
-    <string name="jacob">JACOB</string>
+    <string name="jacob">HOME</string>
     <string name="nominal">ALL SYSTEMS NOMINAL</string>
-    <string name="tts_welcome">Welcome, Jacob.</string>
+    <string name="tts_welcome">Welcome home.</string>
     <string name="about_kicker">SETTINGS</string>
-    <string name="about_line">Dallas built this because Dallas kicks ass</string>
+    <string name="about_line">Dallas built this because Dallas kicks ass\ngithub.com/dbrush95/googletvdebloatlauncher</string>
     <string name="about_body">A Stark-styled home for this Vizio. Dock on the bottom, the focused app in big type, inputs up front, and a clock that drifts so it does not burn in. No recommendation rows. No ads.</string>
     <string name="replay">Replay welcome</string>
     <string name="close">Close</string>

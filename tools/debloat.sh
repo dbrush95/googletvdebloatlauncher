@@ -1,7 +1,7 @@
 #!/bin/sh
 # Disable the packages in debloat.txt. Reversible. Does not uninstall.
 # Records what was enabled first, the same idea as CleanYourTV.
-# Jacob's TV has to be the Home app before stock launchers are touched.
+# This app has to be the Home app before stock launchers are touched.
 # Cast and setup are never disabled.
 set -eu
 cd "$(dirname "$0")"
@@ -17,9 +17,9 @@ HOME=$("$ADB" shell cmd package resolve-activity -a android.intent.action.MAIN -
 OURS=0
 echo "$HOME" | grep -q "com.dbrush.jacobstv" && OURS=1
 if [ "$OURS" -eq 1 ]; then
-  echo "Jacob's TV is Home. Stock launchers can be disabled."
+  echo "This app is Home. Stock launchers can be disabled."
 else
-  echo "Jacob's TV is not Home yet. Stock launchers will be left alone."
+  echo "This app is not Home yet. Stock launchers will be left alone."
 fi
 : > state/applied.txt
 while IFS= read -r raw || [ -n "$raw" ]; do
@@ -32,7 +32,7 @@ while IFS= read -r raw || [ -n "$raw" ]; do
       ;;
     com.google.android.apps.tv.launcherx|com.google.android.tvlauncher|com.google.android.leanbacklauncher)
       if [ "$OURS" -ne 1 ]; then
-        echo "skip $pkg (Jacob's TV is not Home)"
+        echo "skip $pkg (this app is not Home)"
         continue
       fi
       ;;
