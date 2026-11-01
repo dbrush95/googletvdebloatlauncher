@@ -1,0 +1,2 @@
+-keep class com.dbrush.jacobstv.ReactorView { public <init>(...); }
+-keep class com.dbrush.jacobstv.MainActivity { *; }

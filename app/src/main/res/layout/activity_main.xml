@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg">
+
+    <LinearLayout
+        android:id="@+id/home"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingStart="48dp"
+        android:paddingTop="24dp"
+        android:paddingEnd="48dp"
+        android:paddingBottom="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <com.dbrush.jacobstv.ReactorView
+                android:layout_width="52dp"
+                android:layout_height="52dp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="0.28"
+                    android:text="@string/header_name"
+                    android:textColor="@color/fg"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/stats"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.12"
+                    android:textColor="@color/cyan"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:orientation="vertical">
+
+                <TextClock
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-light"
+                    android:format12Hour="h:mm"
+                    android:format24Hour="H:mm"
+                    android:textColor="@color/gold"
+                    android:textSize="36sp" />
+
+                <TextClock
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:format12Hour="EEE  ·  MMM d"
+                    android:format24Hour="EEE  ·  MMM d"
+                    android:letterSpacing="0.1"
+                    android:textAllCaps="true"
+                    android:textColor="@color/muted"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/shelfKicker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.42"
+                android:text="@string/focused"
+                android:textColor="@color/cyan"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/shelfName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:letterSpacing="0.12"
+                android:text="@string/jacob"
+                android:textColor="@color/gold"
+                android:textSize="48sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:letterSpacing="0.08"
+                android:text="@string/shelf_hint"
+                android:textColor="@color/muted"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/chipInputs"
+                style="@style/HudChip"
+                android:layout_marginEnd="8dp"
+                android:text="@string/inputs" />
+
+            <TextView
+                android:id="@+id/chipLink"
+                style="@style/HudChip"
+                android:layout_marginEnd="8dp"
+                android:text="@string/link" />
+
+            <TextView
+                android:id="@+id/chipSettings"
+                style="@style/HudChip"
+                android:layout_marginEnd="8dp"
+                android:text="@string/settings" />
+
+            <TextView
+                android:id="@+id/chipAbout"
+                style="@style/HudChip"
+                android:text="@string/about" />
+        </LinearLayout>
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/dock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_dock"
+                android:orientation="horizontal"
+                android:padding="8dp" />
+        </HorizontalScrollView>
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/library"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#F205070B"
+        android:clickable="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingStart="48dp"
+            android:paddingTop="28dp"
+            android:paddingEnd="48dp"
+            android:paddingBottom="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.32"
+                android:text="@string/all_apps"
+                android:textColor="@color/cyan"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/library_hint"
+                android:textColor="@color/muted"
+                android:textSize="14sp" />
+
+            <GridView
+                android:id="@+id/libraryGrid"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="16dp"
+                android:layout_weight="1"
+                android:columnWidth="148dp"
+                android:gravity="center"
+                android:horizontalSpacing="14dp"
+                android:listSelector="@android:color/transparent"
+                android:numColumns="auto_fit"
+                android:stretchMode="columnWidth"
+                android:verticalSpacing="14dp" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/menu"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#CC05070B"
+        android:clickable="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="460dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.36"
+                android:text="@string/tile"
+                android:textColor="@color/cyan"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/menuTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/gold"
+                android:textSize="26sp" />
+
+            <TextView
+                android:id="@+id/menuMoveLeft"
+                style="@style/HudChip"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="16dp"
+                android:layout_weight="0"
+                android:text="@string/move_left" />
+
+            <TextView
+                android:id="@+id/menuMoveRight"
+                style="@style/HudChip"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="0"
+                android:text="@string/move_right" />
+
+            <TextView
+                android:id="@+id/menuRemove"
+                style="@style/HudChip"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="0"
+                android:text="@string/remove_dock" />
+
+            <TextView
+                android:id="@+id/menuPin"
+                style="@style/HudChip"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="0"
+                android:text="@string/pin_dock" />
+
+            <TextView
+                android:id="@+id/menuInfo"
+                style="@style/HudChip"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="0"
+                android:text="@string/app_info" />
+
+            <TextView
+                android:id="@+id/menuClose"
+                style="@style/HudChip"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="0"
+                android:text="@string/close" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/dream"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/bg"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/dreamClock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <com.dbrush.jacobstv.ReactorView
+                android:layout_width="72dp"
+                android:layout_height="72dp" />
+
+            <TextClock
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:fontFamily="sans-serif-light"
+                android:format12Hour="h:mm"
+                android:format24Hour="H:mm"
+                android:textColor="@color/gold"
+                android:textSize="84sp" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/welcome"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/bg"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <com.dbrush.jacobstv.ReactorView
+            android:layout_width="220dp"
+            android:layout_height="220dp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="120dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="80dp"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/wordWelcome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.5"
+                android:text="@string/welcome"
+                android:textColor="@color/cyan"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/wordJacob"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="0.22"
+                android:text="@string/jacob"
+                android:textColor="@color/gold"
+                android:textSize="64sp" />
+
+            <TextView
+                android:id="@+id/wordStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:letterSpacing="0.28"
+                android:text="@string/nominal"
+                android:textColor="@color/fg"
+                android:textSize="14sp" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/about"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#CC05070B"
+        android:clickable="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/aboutCard"
+            android:layout_width="560dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="28dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.4"
+                android:text="@string/about_kicker"
+                android:textColor="@color/cyan"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:fontFamily="sans-serif-medium"
+                android:text="@string/about_line"
+                android:textColor="@color/gold"
+                android:textSize="28sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:lineSpacingExtra="4dp"
+                android:text="@string/about_body"
+                android:textColor="@color/fg"
+                android:textSize="18sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/replayWelcome"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_button"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="@string/replay"
+                    android:textColor="@color/button_text"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/closeAbout"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_button"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="@string/close"
+                    android:textColor="@color/button_text"
+                    android:textSize="16sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
+</FrameLayout>

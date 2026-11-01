@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Jacob\'s TV</string>
+    <string name="header_name">JACOB</string>
+    <string name="header_tag">Low bloat  ·  no ads</string>
+    <string name="welcome">WELCOME</string>
+    <string name="jacob">JACOB</string>
+    <string name="nominal">ALL SYSTEMS NOMINAL</string>
+    <string name="tts_welcome">Welcome, Jacob.</string>
+    <string name="about_kicker">ABOUT</string>
+    <string name="about_line">Dallas built this because Dallas kicks ass</string>
+    <string name="about_body">A Stark-styled home for this Vizio. Dock on the bottom, the focused app in big type, inputs up front, and a clock that drifts so it does not burn in. No recommendation rows. No ads.</string>
+    <string name="replay">Replay welcome</string>
+    <string name="close">Close</string>
+    <string name="settings">Settings</string>
+    <string name="about">About</string>
+    <string name="inputs">Inputs</string>
+    <string name="link">Link</string>
+    <string name="focused">FOCUSED</string>
+    <string name="moving">MOVING</string>
+    <string name="all_apps">ALL APPS</string>
+    <string name="shelf_hint">OK opens   ·   Down for every app   ·   Hold OK to pin or move</string>
+    <string name="library_hint">Stock recommendation rows stay off this grid. Hold OK to pin a tile to the dock.</string>
+    <string name="tile">TILE</string>
+    <string name="move_left">Move left</string>
+    <string name="move_right">Move right</string>
+    <string name="remove_dock">Remove from dock</string>
+    <string name="pin_dock">Pin to dock</string>
+    <string name="app_info">App info</string>
+</resources>
