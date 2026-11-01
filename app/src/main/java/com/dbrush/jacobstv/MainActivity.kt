@@ -655,30 +655,28 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private fun refreshWeather() {
         Thread {
             val line = runCatching {
-                val url = URL("https://api.open-meteo.com/v1/forecast?latitude=39.96&longitude=-84.18&current=temperature_2m,weather_code&temperature_unit=fahrenheit")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.connectTimeout = 4000
-                conn.readTimeout = 4000
-                val body = conn.inputStream.bufferedReader().use { it.readText() }
-                conn.disconnect()
-                val temp = Regex("\"temperature_2m\":(-?[0-9.]+)").find(body)?.groupValues?.get(1)?.toDoubleOrNull()
+                val point = get("https://api.weather.gov/points/39.9637,-84.1797")
+                val forecast = Regex("\"forecast\":\"(https:[^\"]+)\"").find(point)?.groupValues?.get(1)
                     ?: return@runCatching ""
-                val code = Regex("\"weather_code\":(\\d+)").find(body)?.groupValues?.get(1)?.toIntOrNull() ?: -1
-                "${temp.toInt()}° ${weatherName(code)}"
+                val body = get(forecast)
+                val temp = Regex("\"temperature\":(\\d+)").find(body)?.groupValues?.get(1) ?: return@runCatching ""
+                val words = Regex("\"shortForecast\":\"([^\"]+)\"").find(body)?.groupValues?.get(1) ?: "WEATHER"
+                val label = words.split(" ").take(2).joinToString(" ").uppercase(Locale.US)
+                "$temp° $label"
             }.getOrDefault("")
             if (line.isNotEmpty()) runOnUiThread { if (!isFinishing) weatherView.text = line }
         }.start()
     }
 
-    private fun weatherName(code: Int): String = when (code) {
-        0 -> "CLEAR"
-        in 1..3 -> "CLOUDY"
-        in 45..48 -> "FOG"
-        in 51..67 -> "RAIN"
-        in 71..77 -> "SNOW"
-        in 80..82 -> "SHOWERS"
-        in 95..99 -> "STORM"
-        else -> "WEATHER"
+    private fun get(address: String): String {
+        val conn = URL(address).openConnection() as HttpURLConnection
+        conn.connectTimeout = 4000
+        conn.readTimeout = 4000
+        conn.setRequestProperty("User-Agent", "JacobsTV/1.0 (dbrush95/jacobstv)")
+        conn.setRequestProperty("Accept", "application/geo+json")
+        val body = conn.inputStream.bufferedReader().use { it.readText() }
+        conn.disconnect()
+        return body
     }
 
     private fun linkLabel(): String {
