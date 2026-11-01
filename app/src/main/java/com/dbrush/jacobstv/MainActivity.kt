@@ -115,7 +115,6 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         menuPin = findViewById(R.id.menuPin)
         libraryAdapter = AppsAdapter({ open(it) }, { showMenu(it, onDock = false) })
         grid.adapter = libraryAdapter
-        grid.setItemsCanFocus(true)
         grid.setOnItemClickListener { _, _, position, _ ->
             open(libraryAdapter.getItem(position))
         }
