@@ -115,6 +115,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         menuPin = findViewById(R.id.menuPin)
         libraryAdapter = AppsAdapter({ open(it) }, { showMenu(it, onDock = false) })
         grid.adapter = libraryAdapter
+        grid.itemsCanFocus = true
         grid.setOnItemClickListener { _, _, position, _ ->
             open(libraryAdapter.getItem(position))
         }
@@ -370,7 +371,10 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         library.translationY = 80f
         library.animate().translationY(0f).setDuration(220).start()
         grid.setSelection(0)
-        grid.post { grid.requestFocus() }
+        grid.post {
+            val first = grid.getChildAt(0)
+            if (first != null) first.requestFocus() else grid.requestFocus()
+        }
         showShelf(getString(R.string.all_apps), getString(R.string.all_apps))
     }
 
@@ -1024,32 +1028,37 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
     private fun appIcon(pm: PackageManager, info: ResolveInfo): Drawable {
         val activity = info.activityInfo
+        PACK[activity.packageName]?.let { return markIcon(it) }
         val loaded = listOfNotNull(
             runCatching { if (activity.icon != 0) activity.loadIcon(pm) else null }.getOrNull(),
             runCatching { if (activity.applicationInfo.icon != 0) activity.applicationInfo.loadIcon(pm) else null }.getOrNull(),
-            runCatching { activity.loadBanner(pm) }.getOrNull(),
             runCatching { info.loadIcon(pm) }.getOrNull(),
         ).firstOrNull { it.intrinsicWidth > 0 && it.intrinsicHeight > 0 }
         if (loaded != null) return loaded
         val label = info.loadLabel(pm)?.toString()?.takeIf { it.isNotBlank() } ?: activity.packageName
-        return letterIcon(MARKS[activity.packageName] ?: label.take(2).uppercase(Locale.US), activity.packageName)
+        return markIcon(Mark(label.take(2).uppercase(Locale.US), 0xFF5FD0E6.toInt()))
     }
 
-    private fun letterIcon(mark: String, key: String): Drawable {
-        val size = (72 * resources.displayMetrics.density).toInt().coerceAtLeast(72)
+    private fun markIcon(mark: Mark): Drawable {
+        val size = (96 * resources.displayMetrics.density).toInt().coerceAtLeast(96)
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        val hue = (key.hashCode() and 0xFF) / 255f * 40f
-        paint.color = android.graphics.Color.HSVToColor(255, floatArrayOf(190f + hue, 0.45f, 0.18f))
-        val radius = size * 0.18f
-        canvas.drawRoundRect(0f, 0f, size.toFloat(), size.toFloat(), radius, radius, paint)
-        paint.color = 0xFF5FD0E6.toInt()
+        val inset = size * 0.08f
+        paint.color = (mark.color and 0x00FFFFFF) or 0x33000000
+        val radius = size * 0.22f
+        canvas.drawRoundRect(inset, inset, size - inset, size - inset, radius, radius, paint)
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = size * 0.035f
+        paint.color = mark.color
+        canvas.drawRoundRect(inset, inset, size - inset, size - inset, radius, radius, paint)
+        paint.style = Paint.Style.FILL
+        paint.color = mark.color
         paint.textAlign = Paint.Align.CENTER
-        paint.textSize = size * (if (mark.length > 2) 0.28f else 0.42f)
+        paint.textSize = size * (if (mark.text.length > 2) 0.22f else 0.34f)
         val bounds = android.graphics.Rect()
-        paint.getTextBounds(mark, 0, mark.length, bounds)
-        canvas.drawText(mark, size / 2f, size / 2f - bounds.exactCenterY(), paint)
+        paint.getTextBounds(mark.text, 0, mark.text.length, bounds)
+        canvas.drawText(mark.text, size / 2f, size / 2f - bounds.exactCenterY(), paint)
         return BitmapDrawable(resources, bitmap)
     }
 
@@ -1061,19 +1070,26 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         private const val KEY_INPUTS = "inputs"
         private const val KEY_QUIET = "quiet"
         private const val KEY_BROWSER = "browserOffered"
-        private val MARKS = mapOf(
-            "com.netflix.ninja" to "N",
-            "com.google.android.youtube.tv" to "YT",
-            "com.google.android.youtube" to "YT",
-            "com.amazon.amazonvideo.livingroom" to "P",
-            "com.disney.disneyplus" to "D+",
-            "com.android.vending" to ">",
-            "com.nvidia.geforcenow" to "GFN",
-            "com.limelight" to "M",
-            "org.xbmc.kodi" to "K",
-            "com.apple.atve.androidtv.appletv" to "tv+",
-            "com.cbs.ott" to "P+",
-            "com.spotify.tv.android" to "S",
+        private data class Mark(val text: String, val color: Int)
+        private val PACK = mapOf(
+            "com.netflix.ninja" to Mark("N", 0xFFE50914.toInt()),
+            "com.google.android.youtube.tv" to Mark("YT", 0xFFFF4E45.toInt()),
+            "com.google.android.youtube" to Mark("YT", 0xFFFF4E45.toInt()),
+            "com.amazon.amazonvideo.livingroom" to Mark("prime", 0xFF00A8E1.toInt()),
+            "com.amazon.avod.thirdpartyclient" to Mark("prime", 0xFF00A8E1.toInt()),
+            "com.disney.disneyplus" to Mark("D+", 0xFF6EA8FF.toInt()),
+            "com.android.vending" to Mark("▶", 0xFF5FD0E6.toInt()),
+            "com.nvidia.geforcenow" to Mark("GFN", 0xFF76B900.toInt()),
+            "com.limelight" to Mark("☾", 0xFF7EB6FF.toInt()),
+            "org.xbmc.kodi" to Mark("K", 0xFF17B2E7.toInt()),
+            "com.apple.atve.androidtv.appletv" to Mark("tv+", 0xFFF2F2F2.toInt()),
+            "com.cbs.ott" to Mark("P+", 0xFF0064FF.toInt()),
+            "com.spotify.tv.android" to Mark("♫", 0xFF1DB954.toInt()),
+            "com.hulu.livingroomplus" to Mark("hulu", 0xFF1CE783.toInt()),
+            "com.peacocktv.peacockandroid" to Mark("P", 0xFFF5C518.toInt()),
+            "com.plexapp.android" to Mark("plex", 0xFFE5A00D.toInt()),
+            "com.tubitv" to Mark("tubi", 0xFFC084FC.toInt()),
+            "com.wbd.stream" to Mark("max", 0xFF002BE7.toInt()),
         )
         private val PREFERRED = listOf(
             "com.netflix.ninja",

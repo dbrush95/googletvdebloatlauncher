@@ -177,7 +177,7 @@
         android:id="@+id/library"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#F205070B"
+        android:background="#C005070B"
         android:clickable="true"
         android:visibility="gone">
 
@@ -215,7 +215,8 @@
                 android:columnWidth="148dp"
                 android:gravity="center"
                 android:horizontalSpacing="14dp"
-                android:drawSelectorOnTop="true"
+                android:descendantFocusability="afterDescendants"
+                android:drawSelectorOnTop="false"
                 android:focusable="true"
                 android:listSelector="@drawable/bg_grid"
                 android:numColumns="auto_fit"
