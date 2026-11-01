@@ -51,6 +51,8 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private lateinit var dream: View
     private lateinit var dreamClock: View
     private lateinit var dock: LinearLayout
+    private lateinit var appsRow: LinearLayout
+    private lateinit var inputsRow: LinearLayout
     private lateinit var grid: GridView
     private lateinit var shelfKicker: TextView
     private lateinit var shelfName: TextView
@@ -102,6 +104,8 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         dream = findViewById(R.id.dream)
         dreamClock = findViewById(R.id.dreamClock)
         dock = findViewById(R.id.dock)
+        appsRow = findViewById(R.id.appsRow)
+        inputsRow = findViewById(R.id.inputsRow)
         grid = findViewById(R.id.libraryGrid)
         shelfKicker = findViewById(R.id.shelfKicker)
         shelfName = findViewById(R.id.shelfName)
@@ -250,10 +254,6 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
         if (library.visibility == View.VISIBLE && back) {
             hideLibrary()
-            return true
-        }
-        if (clearHome() && event.keyCode == KeyEvent.KEYCODE_DPAD_DOWN && dock.hasFocus()) {
-            showLibrary()
             return true
         }
         if (clearHome() && event.keyCode == KeyEvent.KEYCODE_TV_INPUT) {
@@ -490,7 +490,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         dockPkgs.removeAt(index)
         dockPkgs.add(next, pkg)
         saveDock()
-        renderDock()
+        renderHome()
         hideMenu()
         showShelf(menuTitle.text.toString(), getString(R.string.moving))
     }
@@ -502,7 +502,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
         dockPkgs.add(pkg)
         saveDock()
-        renderDock()
+        renderHome()
         hideMenu()
         hideLibrary()
     }
@@ -510,7 +510,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private fun unpin(pkg: String) {
         dockPkgs.remove(pkg)
         saveDock()
-        renderDock()
+        renderHome()
         hideMenu()
     }
 
@@ -707,7 +707,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         if (token in dockPkgs || dockPkgs.size >= 9) return
         dockPkgs.add(token)
         saveDock()
-        renderDock()
+        renderHome()
     }
 
     private fun openMappedInput(label: String) {
@@ -798,7 +798,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 apps = listOf(browser) + next
                 libraryAdapter.setItems(apps)
                 ensureDock()
-                renderDock()
+                renderHome()
             }
         }.start()
     }
@@ -833,7 +833,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 val tile = layoutInflater.inflate(R.layout.item_app, dock, false)
                 tile.findViewById<TextView>(R.id.label).text = "Browser"
                 tile.findViewById<android.widget.ImageView>(R.id.icon).setImageResource(R.drawable.ic_web)
-                tile.setBackgroundResource(R.drawable.bg_dock_item)
+                tile.setBackgroundResource(R.drawable.bg_tile)
                 val width = (92 * resources.displayMetrics.density).toInt()
                 tile.layoutParams = LinearLayout.LayoutParams(width, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
                     marginEnd = pad
@@ -843,7 +843,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                     dockPkgs.remove(pkg)
                     prefs.edit().putBoolean(KEY_BROWSER, true).apply()
                     saveDock()
-                    renderDock()
+                    renderHome()
                     true
                 }
                 dock.addView(tile)
@@ -863,7 +863,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 }
                 if (res != 0) icon.setImageResource(res) else icon.setImageDrawable(null)
                 tile.findViewById<TextView>(R.id.label).text = name
-                tile.setBackgroundResource(R.drawable.bg_dock_item)
+                tile.setBackgroundResource(R.drawable.bg_tile)
                 val width = (92 * resources.displayMetrics.density).toInt()
                 tile.layoutParams = LinearLayout.LayoutParams(width, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
                     marginEnd = pad
@@ -872,7 +872,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 tile.setOnLongClickListener {
                     dockPkgs.remove(pkg)
                     saveDock()
-                    renderDock()
+                    renderHome()
                     true
                 }
                 dock.addView(tile)
@@ -882,7 +882,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             val tile = layoutInflater.inflate(R.layout.item_app, dock, false)
             tile.findViewById<android.widget.ImageView>(R.id.icon).setImageDrawable(entry.icon)
             tile.findViewById<TextView>(R.id.label).text = entry.label
-            tile.setBackgroundResource(R.drawable.bg_dock_item)
+            tile.setBackgroundResource(R.drawable.bg_tile)
             tile.minimumHeight = 0
             val tight = (6 * resources.displayMetrics.density).toInt()
             tile.setPadding(tight, tight, tight, tight)
@@ -901,29 +901,112 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             }
             dock.addView(tile)
         }
-        val add = TextView(this)
-        add.text = getString(R.string.add_app)
-        add.setTextColor(resources.getColor(R.color.gold))
-        add.textSize = 18f
-        add.gravity = android.view.Gravity.CENTER
-        add.setBackgroundResource(R.drawable.bg_dock_item)
-        add.isFocusable = true
-        add.isClickable = true
-        val addWidth = (128 * resources.displayMetrics.density).toInt()
-        val addHeight = (96 * resources.displayMetrics.density).toInt()
-        add.layoutParams = LinearLayout.LayoutParams(addWidth, addHeight)
-        add.setOnClickListener { showLibrary() }
-        add.setOnFocusChangeListener { _, focused ->
-            if (focused) showShelf(getString(R.string.add_app), getString(R.string.all_apps))
+        wireRows()
+    }
+
+    private fun renderHome() {
+        renderDock()
+        renderApps()
+        renderInputs()
+        wireRows()
+    }
+
+    private fun renderApps() {
+        appsRow.removeAllViews()
+        val pinned = dockPkgs.toSet()
+        for (entry in apps) {
+            val key = dockKey(entry)
+            if (key.isEmpty() || key in pinned) continue
+            val tile = layoutInflater.inflate(R.layout.item_app, appsRow, false)
+            tile.findViewById<android.widget.ImageView>(R.id.icon).setImageDrawable(entry.icon)
+            tile.findViewById<TextView>(R.id.label).text = entry.label
+            placeCard(tile)
+            tile.setOnClickListener { open(entry) }
+            tile.setOnLongClickListener {
+                showMenu(entry, onDock = false)
+                true
+            }
+            tile.setOnFocusChangeListener { view, focused ->
+                if (focused) {
+                    showShelf(entry.label, "APPLICATIONS")
+                    view.requestRectangleOnScreen(android.graphics.Rect(0, 0, view.width, view.height), true)
+                }
+            }
+            appsRow.addView(tile)
         }
-        dock.addView(add)
+    }
+
+    private fun renderInputs() {
+        inputsRow.removeAllViews()
+        val ports = listOf("HDMI 1", "HDMI 2", "HDMI 3", "HDMI 4", "AV", "Tuner")
+        val raw = prefs.getString(KEY_INPUTS, "PS5|ps5|HDMI 1,Xbox|xbox|HDMI 2,Switch|switch|HDMI 3,PC|pc|HDMI 4,Cable|cable|AV") ?: ""
+        val slots = raw.split(",").mapIndexedNotNull { index, item ->
+            val parts = item.split("|")
+            if (parts.size >= 2) Triple(parts[0], parts[1], parts.getOrNull(2) ?: ports[index % ports.size]) else null
+        }
+        for (slot in slots) {
+            val tile = layoutInflater.inflate(R.layout.item_app, inputsRow, false)
+            val icon = tile.findViewById<android.widget.ImageView>(R.id.icon)
+            val res = when (slot.second) {
+                "ps5" -> R.drawable.logo_ps
+                "xbox" -> R.drawable.logo_xbox
+                else -> 0
+            }
+            if (res != 0) icon.setImageResource(res) else icon.setImageDrawable(markIcon(Mark(slot.first.take(2).uppercase(Locale.US), 0xFF5FD0E6.toInt())))
+            tile.findViewById<TextView>(R.id.label).text = slot.first
+            placeCard(tile)
+            tile.setOnClickListener { openMappedInput(slot.third) }
+            tile.setOnLongClickListener {
+                showInputEditor()
+                true
+            }
+            tile.setOnFocusChangeListener { view, focused ->
+                if (focused) {
+                    showShelf(slot.first, slot.third)
+                    view.requestRectangleOnScreen(android.graphics.Rect(0, 0, view.width, view.height), true)
+                }
+            }
+            inputsRow.addView(tile)
+        }
+    }
+
+    private fun placeCard(tile: View) {
+        tile.setBackgroundResource(R.drawable.bg_tile)
+        tile.isFocusable = true
+        tile.isClickable = true
+        if (tile.id == View.NO_ID) tile.id = View.generateViewId()
+        val width = (148 * resources.displayMetrics.density).toInt()
+        val gap = (12 * resources.displayMetrics.density).toInt()
+        tile.layoutParams = LinearLayout.LayoutParams(width, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+            marginEnd = gap
+        }
+    }
+
+    private fun wireRows() {
+        val rows = listOf(dock, appsRow, inputsRow).filter { it.childCount > 0 }
+        for (row in rows) {
+            for (i in 0 until row.childCount) {
+                val child = row.getChildAt(i)
+                if (child.id == View.NO_ID) child.id = View.generateViewId()
+            }
+        }
+        for (r in rows.indices) {
+            val row = rows[r]
+            val above = rows.getOrNull(r - 1)
+            val below = rows.getOrNull(r + 1)
+            for (i in 0 until row.childCount) {
+                val child = row.getChildAt(i)
+                child.nextFocusUpId = if (above == null) R.id.clockHit else above.getChildAt(minOf(i, above.childCount - 1)).id
+                if (below != null) child.nextFocusDownId = below.getChildAt(minOf(i, below.childCount - 1)).id
+            }
+        }
+        val first = rows.firstOrNull()?.getChildAt(0)
+        if (first != null) findViewById<View>(R.id.clockHit).nextFocusDownId = first.id
     }
 
     private fun focusDock() {
-        dock.post {
-            val first = dock.getChildAt(0)
-            if (first != null) first.requestFocus()
-        }
+        val first = listOf(dock, appsRow, inputsRow).firstOrNull { it.childCount > 0 }?.getChildAt(0)
+        (first ?: dock).post { (first ?: dock).requestFocus() }
     }
 
     private fun showShelf(label: String, kicker: String) {

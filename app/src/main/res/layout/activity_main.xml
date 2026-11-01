@@ -116,60 +116,116 @@
             </LinearLayout>
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
+        <TextView
+            android:id="@+id/shelfKicker"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:letterSpacing="0.42"
+            android:text="@string/focused"
+            android:textColor="@color/cyan"
+            android:textSize="11sp" />
 
-            <TextView
-                android:id="@+id/shelfKicker"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:letterSpacing="0.42"
-                android:text="@string/focused"
-                android:textColor="@color/cyan"
-                android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/shelfName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-medium"
-                android:gravity="center"
-                android:letterSpacing="0.12"
-                android:text="@string/jacob"
-                android:textColor="@color/gold"
-                android:textSize="48sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:letterSpacing="0.08"
-                android:text="@string/shelf_hint"
-                android:textColor="@color/muted"
-                android:textSize="13sp" />
-        </LinearLayout>
-
-        <HorizontalScrollView
+        <TextView
+            android:id="@+id/shelfName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.12"
+            android:text="@string/jacob"
+            android:textColor="@color/gold"
+            android:textSize="28sp" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="8dp"
+            android:layout_weight="1"
+            android:descendantFocusability="afterDescendants"
+            android:fillViewport="true"
+            android:focusable="false"
             android:scrollbars="none">
 
             <LinearLayout
-                android:id="@+id/dock"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_dock"
-                android:orientation="horizontal"
-                android:paddingStart="12dp"
-                android:paddingTop="4dp"
-                android:paddingEnd="12dp"
-                android:paddingBottom="0dp" />
-        </HorizontalScrollView>
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.28"
+                    android:text="FAVORITES"
+                    android:textColor="@color/cyan"
+                    android:textSize="12sp" />
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:descendantFocusability="afterDescendants"
+                    android:focusable="false"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/dock"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingBottom="8dp" />
+                </HorizontalScrollView>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:letterSpacing="0.28"
+                    android:text="APPLICATIONS"
+                    android:textColor="@color/cyan"
+                    android:textSize="12sp" />
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:descendantFocusability="afterDescendants"
+                    android:focusable="false"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/appsRow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingBottom="8dp" />
+                </HorizontalScrollView>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:letterSpacing="0.28"
+                    android:text="INPUTS"
+                    android:textColor="@color/cyan"
+                    android:textSize="12sp" />
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:descendantFocusability="afterDescendants"
+                    android:focusable="false"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/inputsRow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingBottom="12dp" />
+                </HorizontalScrollView>
+            </LinearLayout>
+        </ScrollView>
 
     </LinearLayout>
 
