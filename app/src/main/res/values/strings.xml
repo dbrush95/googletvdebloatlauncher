@@ -29,7 +29,8 @@
     <string name="app_info">App info</string>
     <string name="wall">Wall</string>
     <string name="debloat">Debloat</string>
-    <string name="debloat_body">Recommendation rows are already hidden on this home. Disable stops them from running. Nothing is uninstalled. If the TV refuses, run tools/debloat.sh from a computer. tools/restore.sh puts them back.</string>
-    <string name="debloat_run">Disable bloat on this TV</string>
+    <string name="debloat_body">Disable only. Nothing is uninstalled. Cast, the Play Store, and setup stay on. Stock launchers wait until this app is Home.</string>
+    <string name="debloat_run">Disable bloat</string>
+    <string name="debloat_restore">Restore</string>
     <string name="add_app">Add</string>
 </resources>

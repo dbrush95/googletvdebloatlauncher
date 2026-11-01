@@ -1,9 +1,13 @@
-# Recommendation rows, stock homes, and backdrop ads.
-# Stock homes are skipped unless Jacob's TV is already the Home app.
-# Lines starting with # are ignored. Nothing here is uninstalled.
+# Quiet list for a Vizio Google TV. Disable only. Nothing here is uninstalled.
+# Stock launchers are skipped unless Jacob's TV is already the Home app.
+# Cast (mediashell) and setup (setupwraith) stay on. They keep Cast and Wi-Fi working.
 com.google.android.tvrecommendations
+com.google.android.backdrop
+com.google.android.apps.tv.dreamx
+com.google.android.feedback
+com.google.android.partnersetup
+com.google.android.onetimeinitializer
+com.google.android.play.games
 com.google.android.apps.tv.launcherx
 com.google.android.tvlauncher
 com.google.android.leanbacklauncher
-com.google.android.backdrop
-com.google.android.apps.tv.dreamx

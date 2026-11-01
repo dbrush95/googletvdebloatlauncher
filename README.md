@@ -29,7 +29,7 @@ adb connect TV_IP:5555
 tools/debloat.sh
 ```
 
-That runs `pm disable-user`. It does not uninstall. `tools/restore.sh` turns the same packages back on. Stock launchers are skipped until Jacob's TV owns Home.
+That runs `pm disable-user` and writes a record in `tools/state/`. It does not uninstall. Cast, the Play Store, and setup stay on. `tools/restore.sh` turns the same packages back on. Stock launchers are skipped until Jacob's TV owns Home. The Debloat panel on the TV does the same pass, and Restore puts that pass back.
 
 ## Backgrounds
 

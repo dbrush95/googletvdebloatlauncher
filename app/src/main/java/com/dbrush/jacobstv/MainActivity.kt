@@ -120,6 +120,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         welcome.setOnClickListener { finishWelcome() }
         dream.setOnClickListener { hideScreensaver() }
         findViewById<View>(R.id.debloatRun).setOnClickListener { tryDebloat() }
+        findViewById<View>(R.id.debloatRestore).setOnClickListener { tryRestore() }
         findViewById<View>(R.id.debloatClose).setOnClickListener { hideDebloat() }
         debloat.setOnClickListener { hideDebloat() }
         findViewById<View>(R.id.clockHit).setOnClickListener { expand(control); findViewById<View>(R.id.controlInputs).requestFocus() }
@@ -763,8 +764,34 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         showShelf(label, getString(R.string.wall))
     }
 
+    private fun isOurHome(): Boolean {
+        val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+        val resolved = packageManager.resolveActivity(home, 0)
+        return resolved?.activityInfo?.packageName == packageName
+    }
+
+    private fun installedPackage(pkg: String): Boolean {
+        return runCatching { packageManager.getPackageInfo(pkg, 0); true }.getOrDefault(false)
+    }
+
+    private fun debloatTargets(): List<String> {
+        val quiet = BLOAT.filter { installedPackage(it) }
+        val launchers = if (isOurHome()) LAUNCHERS.filter { installedPackage(it) } else emptyList()
+        return (quiet + launchers).filter { it !in NEVER }
+    }
+
     private fun showDebloat() {
-        debloatBody.text = getString(R.string.debloat_body)
+        val found = debloatTargets()
+        val saved = prefs.getStringSet(KEY_QUIET, emptySet()) ?: emptySet()
+        val home = if (isOurHome()) "Jacob's TV is Home." else "Stock launcher stays until this app is Home."
+        debloatBody.text = buildString {
+            append("Disable only. Nothing is uninstalled. Cast and setup stay on. ")
+            append(home)
+            append("\n")
+            if (found.isEmpty()) append("\nNone of the quiet packages are installed.")
+            else found.forEach { append("\n").append(it.substringAfterLast('.')) }
+            if (saved.isNotEmpty()) append("\n\nQuiet now: ").append(saved.size)
+        }
         expand(debloat)
         findViewById<View>(R.id.debloatRun).requestFocus()
     }
@@ -785,18 +812,52 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private fun tryDebloat() {
         debloatBody.text = "Working."
         Thread {
-            val lines = DEBLOAT.map { pkg ->
+            val applied = (prefs.getStringSet(KEY_QUIET, emptySet()) ?: emptySet()).toMutableSet()
+            val lines = debloatTargets().map { pkg ->
                 val code = runCatching {
                     Runtime.getRuntime().exec(arrayOf("pm", "disable-user", "--user", "0", pkg)).waitFor()
                 }.getOrDefault(1)
-                if (code == 0) "disabled $pkg" else "blocked $pkg"
+                if (code == 0) {
+                    applied.add(pkg)
+                    "off ${pkg.substringAfterLast('.')}"
+                } else {
+                    "blocked ${pkg.substringAfterLast('.')}"
+                }
             }
-            val text = if (lines.none { it.startsWith("disabled") }) {
-                "This TV blocked the disable. Nothing was uninstalled. From a computer, with USB debugging on, run tools/debloat.sh. tools/restore.sh puts them back."
+            prefs.edit().putStringSet(KEY_QUIET, applied).apply()
+            val text = if (lines.isEmpty()) {
+                "Nothing on this set matches the quiet list."
+            } else if (lines.none { it.startsWith("off") }) {
+                "This TV blocked the disable. Nothing was uninstalled. From a computer: tools/debloat.sh. tools/restore.sh puts them back."
             } else {
                 lines.joinToString("\n")
             }
             runOnUiThread { if (!isFinishing) debloatBody.text = text }
+        }.start()
+    }
+
+    private fun tryRestore() {
+        val saved = (prefs.getStringSet(KEY_QUIET, emptySet()) ?: emptySet()).toList()
+        if (saved.isEmpty()) {
+            debloatBody.text = "Nothing from this app is quiet. tools/restore.sh still reads the computer record."
+            return
+        }
+        debloatBody.text = "Working."
+        Thread {
+            val left = saved.toMutableSet()
+            val lines = saved.map { pkg ->
+                val code = runCatching {
+                    Runtime.getRuntime().exec(arrayOf("pm", "enable", "--user", "0", pkg)).waitFor()
+                }.getOrDefault(1)
+                if (code == 0) {
+                    left.remove(pkg)
+                    "on ${pkg.substringAfterLast('.')}"
+                } else {
+                    "blocked ${pkg.substringAfterLast('.')}"
+                }
+            }
+            prefs.edit().putStringSet(KEY_QUIET, left).apply()
+            runOnUiThread { if (!isFinishing) debloatBody.text = lines.joinToString("\n") }
         }.start()
     }
 
@@ -903,6 +964,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         private const val KEY_WALL = "wall"
         private const val KEY_ZIP = "zip"
         private const val KEY_INPUTS = "inputs"
+        private const val KEY_QUIET = "quiet"
         private val PREFERRED = listOf(
             "com.netflix.ninja",
             "com.google.android.youtube.tv",
@@ -926,13 +988,25 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             "com.google.android.apps.tv.dreamx",
             "com.google.android.tungsten.setupwraith",
         )
-        private val DEBLOAT = listOf(
+        private val BLOAT = listOf(
             "com.google.android.tvrecommendations",
+            "com.google.android.backdrop",
+            "com.google.android.apps.tv.dreamx",
+            "com.google.android.feedback",
+            "com.google.android.partnersetup",
+            "com.google.android.onetimeinitializer",
+            "com.google.android.play.games",
+        )
+        private val LAUNCHERS = listOf(
             "com.google.android.apps.tv.launcherx",
             "com.google.android.tvlauncher",
             "com.google.android.leanbacklauncher",
-            "com.google.android.backdrop",
-            "com.google.android.apps.tv.dreamx",
+        )
+        private val NEVER = setOf(
+            "com.google.android.tungsten.setupwraith",
+            "com.google.android.apps.mediashell",
+            "com.android.vending",
+            "com.google.android.gms",
         )
     }
 }
