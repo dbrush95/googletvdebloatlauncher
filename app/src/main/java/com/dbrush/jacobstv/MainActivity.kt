@@ -80,6 +80,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private var apps: List<AppEntry> = emptyList()
     private var dockPkgs: MutableList<String> = mutableListOf()
     private var menuEntry: AppEntry? = null
+    private var menuOnDock = false
     private var inputLayer: View? = null
     private var dismissInputs: ((Boolean) -> Unit)? = null
 
