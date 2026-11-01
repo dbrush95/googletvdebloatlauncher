@@ -143,24 +143,6 @@
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/chipInputs"
-                style="@style/HudChip"
-                android:layout_marginEnd="8dp"
-                android:text="@string/inputs" />
-
-            <TextView
-                android:id="@+id/chipLink"
-                style="@style/HudChip"
-                android:layout_marginEnd="8dp"
-                android:text="@string/link" />
-
-            <TextView
-                android:id="@+id/chipSettings"
-                style="@style/HudChip"
-                android:layout_marginEnd="8dp"
-                android:text="@string/settings" />
-
-            <TextView
                 android:id="@+id/chipWall"
                 style="@style/HudChip"
                 android:layout_marginEnd="8dp"
@@ -172,10 +154,6 @@
                 android:layout_marginEnd="8dp"
                 android:text="@string/debloat" />
 
-            <TextView
-                android:id="@+id/chipAbout"
-                style="@style/HudChip"
-                android:text="@string/about" />
         </LinearLayout>
 
         <HorizontalScrollView
@@ -196,16 +174,6 @@
                 android:paddingBottom="0dp" />
         </HorizontalScrollView>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:gravity="center"
-            android:letterSpacing="0.16"
-            android:text="@string/about_line"
-            android:textAllCaps="true"
-            android:textColor="@color/cyan"
-            android:textSize="11sp" />
     </LinearLayout>
 
     <FrameLayout
@@ -594,64 +562,91 @@
                 android:textColor="@color/cyan"
                 android:textSize="12sp" />
 
-            <TextView
-                android:id="@+id/controlInputs"
-                style="@style/HudChip"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:layout_weight="0"
-                android:text="@string/inputs" />
+                android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/controlLink"
-                style="@style/HudChip"
+                <TextView
+                    android:id="@+id/controlInputs"
+                    style="@style/HudChip"
+                    android:layout_width="0dp"
+                    android:layout_height="72dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:text="INPUTS" />
+
+                <TextView
+                    android:id="@+id/controlLink"
+                    style="@style/HudChip"
+                    android:layout_width="0dp"
+                    android:layout_height="72dp"
+                    android:layout_weight="1"
+                    android:text="NETWORK" />
+            </LinearLayout>
+
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:layout_weight="0"
-                android:text="@string/link" />
+                android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/controlSettings"
-                style="@style/HudChip"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:layout_weight="0"
-                android:text="@string/settings" />
+                <TextView
+                    android:id="@+id/controlSettings"
+                    style="@style/HudChip"
+                    android:layout_width="0dp"
+                    android:layout_height="72dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:text="@string/settings" />
 
-            <EditText
-                android:id="@+id/zipField"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="16dp"
-                android:background="@android:color/transparent"
-                android:gravity="center"
-                android:hint="45414"
-                android:inputType="number"
-                android:maxLength="5"
-                android:textColor="@color/gold"
-                android:textColorHint="@color/muted"
-                android:textSize="22sp" />
+                <TextView
+                    android:id="@+id/controlCast"
+                    style="@style/HudChip"
+                    android:layout_width="0dp"
+                    android:layout_height="72dp"
+                    android:layout_weight="1"
+                    android:text="CAST" />
+            </LinearLayout>
 
-            <TextView
-                android:id="@+id/zipSave"
-                style="@style/HudChip"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:layout_weight="0"
-                android:text="SAVE ZIP" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/controlClose"
-                style="@style/HudChip"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:layout_weight="0"
-                android:text="@string/close" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:letterSpacing="0.16"
+                    android:text="ZIP"
+                    android:textColor="@color/cyan"
+                    android:textSize="12sp" />
+
+                <EditText
+                    android:id="@+id/zipField"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:background="@android:color/transparent"
+                    android:gravity="center"
+                    android:hint="45414"
+                    android:inputType="number"
+                    android:maxLength="5"
+                    android:textColor="@color/gold"
+                    android:textColorHint="@color/muted"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/zipSave"
+                    style="@style/HudChip"
+                    android:layout_width="72dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="0"
+                    android:text="OK" />
+            </LinearLayout>
         </LinearLayout>
     </FrameLayout>
 </FrameLayout>

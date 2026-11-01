@@ -20,6 +20,7 @@ import android.provider.Settings
 import android.speech.tts.TextToSpeech
 import android.view.KeyEvent
 import android.view.View
+import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.GridView
 import android.widget.ImageView
@@ -116,28 +117,16 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         findViewById<View>(R.id.aboutCard).setOnClickListener { }
         welcome.setOnClickListener { finishWelcome() }
         dream.setOnClickListener { hideScreensaver() }
-        findViewById<View>(R.id.chipInputs).setOnClickListener { openInputs() }
-        findViewById<View>(R.id.chipLink).apply {
-            setOnClickListener { openWifi() }
-            setOnFocusChangeListener { _, focused -> if (focused) showShelf(getString(R.string.link), getString(R.string.focused)) }
-        }
-        findViewById<View>(R.id.chipSettings).apply {
-            setOnClickListener { openSettings() }
-            setOnFocusChangeListener { _, focused -> if (focused) showShelf(getString(R.string.settings), getString(R.string.focused)) }
-        }
-        findViewById<View>(R.id.chipAbout).apply {
-            setOnClickListener { showAbout() }
-            setOnFocusChangeListener { _, focused -> if (focused) showShelf(getString(R.string.about), getString(R.string.focused)) }
-        }
         findViewById<View>(R.id.chipWall).setOnClickListener { cycleWall() }
         findViewById<View>(R.id.chipDebloat).setOnClickListener { showDebloat() }
         findViewById<View>(R.id.debloatRun).setOnClickListener { tryDebloat() }
         findViewById<View>(R.id.debloatClose).setOnClickListener { hideDebloat() }
         debloat.setOnClickListener { hideDebloat() }
         findViewById<View>(R.id.clockHit).setOnClickListener { expand(control); findViewById<View>(R.id.controlInputs).requestFocus() }
-        findViewById<View>(R.id.controlInputs).setOnClickListener { control.visibility = View.GONE; openInputs() }
+        findViewById<View>(R.id.controlInputs).setOnClickListener { control.visibility = View.GONE; showInputEditor() }
         findViewById<View>(R.id.controlLink).setOnClickListener { control.visibility = View.GONE; openWifi() }
-        findViewById<View>(R.id.controlSettings).setOnClickListener { control.visibility = View.GONE; openSettings() }
+        findViewById<View>(R.id.controlSettings).setOnClickListener { control.visibility = View.GONE; showAbout() }
+        findViewById<View>(R.id.controlCast).setOnClickListener { control.visibility = View.GONE; openCast() }
         val zipField = findViewById<EditText>(R.id.zipField)
         zipField.setText(prefs.getString(KEY_ZIP, "45414"))
         findViewById<View>(R.id.zipSave).setOnClickListener {
@@ -147,13 +136,9 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             zipField.setText(next)
             refreshWeather()
         }
-        findViewById<View>(R.id.controlClose).setOnClickListener { control.visibility = View.GONE }
-        control.setOnClickListener { control.visibility = View.GONE }
         findViewById<View>(R.id.controlCard).setOnClickListener { }
+        control.setOnClickListener { control.visibility = View.GONE }
         applyWall(prefs.getString(KEY_WALL, "rocket") ?: "rocket")
-        findViewById<View>(R.id.chipInputs).setOnFocusChangeListener { _, focused ->
-            if (focused) showShelf(getString(R.string.inputs), getString(R.string.focused))
-        }
         menuMoveLeft.setOnClickListener { nudgeMenu(-1) }
         menuMoveRight.setOnClickListener { nudgeMenu(1) }
         menuRemove.setOnClickListener { menuEntry?.component?.packageName?.let { unpin(it) } }
@@ -462,6 +447,84 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
     }
 
+    private fun openCast() {
+        val cast = Intent("android.settings.CAST_SETTINGS").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (runCatching { startActivity(cast) }.isFailure) openSettings()
+    }
+
+    private fun showInputEditor() {
+        val marks = listOf("PS5", "XBOX", "SWITCH", "PC", "CABLE", "DISC", "LIVE")
+        val raw = prefs.getString(KEY_INPUTS, "PS5|PS5,Xbox|XBOX,Switch|SWITCH,PC|PC,Cable|CABLE") ?: ""
+        val slots = raw.split(",").mapNotNull { item ->
+            val parts = item.split("|")
+            if (parts.size == 2) parts[0] to parts[1] else null
+        }
+        val root = window.decorView as ViewGroup
+        val layer = android.widget.FrameLayout(this)
+        layer.setBackgroundColor(0x6605070B.toInt())
+        layer.setOnClickListener { root.removeView(layer) }
+        val card = LinearLayout(this)
+        card.orientation = LinearLayout.VERTICAL
+        card.setBackgroundResource(R.drawable.bg_card)
+        val pad = (24 * resources.displayMetrics.density).toInt()
+        card.setPadding(pad, pad, pad, pad)
+        card.setOnClickListener { }
+        val title = TextView(this)
+        title.text = "INPUTS"
+        title.setTextColor(resources.getColor(R.color.cyan))
+        title.letterSpacing = 0.3f
+        card.addView(title)
+        val names = mutableListOf<EditText>()
+        val badges = mutableListOf<TextView>()
+        slots.forEach { slot ->
+            val row = LinearLayout(this)
+            row.orientation = LinearLayout.HORIZONTAL
+            row.gravity = android.view.Gravity.CENTER_VERTICAL
+            val badge = TextView(this)
+            badge.text = slot.second
+            badge.setTextColor(resources.getColor(R.color.gold))
+            badge.setPadding(pad / 2, pad / 2, pad / 2, pad / 2)
+            badge.setOnClickListener {
+                val index = marks.indexOf(badge.text.toString())
+                badge.text = marks[if (index < 0) 0 else (index + 1) % marks.size]
+            }
+            val name = EditText(this)
+            name.setText(slot.first)
+            name.setTextColor(resources.getColor(R.color.fg))
+            name.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            val open = TextView(this)
+            open.text = "OPEN"
+            open.setTextColor(resources.getColor(R.color.fg))
+            open.setPadding(pad / 2, pad / 2, pad / 2, pad / 2)
+            open.setOnClickListener { openInputs() }
+            row.addView(badge)
+            row.addView(name)
+            row.addView(open)
+            card.addView(row)
+            names += name
+            badges += badge
+        }
+        val done = TextView(this)
+        done.text = "DONE"
+        done.setTextColor(resources.getColor(R.color.gold))
+        done.setPadding(0, pad, 0, 0)
+        done.setOnClickListener {
+            val encoded = names.zip(badges).joinToString(",") { (name, badge) -> "${name.text}|${badge.text}" }
+            prefs.edit().putString(KEY_INPUTS, encoded).apply()
+            root.removeView(layer)
+        }
+        card.addView(done)
+        val cardParams = android.widget.FrameLayout.LayoutParams(
+            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+            android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+        )
+        cardParams.gravity = android.view.Gravity.CENTER
+        cardParams.leftMargin = pad
+        cardParams.rightMargin = pad
+        layer.addView(card, cardParams)
+        root.addView(layer)
+    }
+
     private fun openSettings() {
         runCatching {
             startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
@@ -599,7 +662,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         dock.post {
             val first = dock.getChildAt(0)
             if (first != null) first.requestFocus()
-            else findViewById<View>(R.id.chipInputs).requestFocus()
+            else findViewById<View>(R.id.chipWall).requestFocus()
         }
     }
 
@@ -676,7 +739,6 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }.getOrDefault(0.0)
         val link = linkLabel()
         stats.text = String.format(Locale.US, "%.1f GB FREE  ·  %d MB  ·  %s", freeGb, mem.availMem / (1024 * 1024), link)
-        findViewById<TextView>(R.id.chipLink).text = link
         refreshWeather()
     }
 
@@ -757,12 +819,15 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         private const val KEY_DOCK = "dock"
         private const val KEY_WALL = "wall"
         private const val KEY_ZIP = "zip"
+        private const val KEY_INPUTS = "inputs"
         private val PREFERRED = listOf(
             "com.netflix.ninja",
             "com.google.android.youtube.tv",
             "com.amazon.amazonvideo.livingroom",
             "com.disney.disneyplus",
             "com.android.vending",
+            "com.nvidia.geforcenow",
+            "com.limelight",
             "com.spotify.tv.android",
         )
         private val YOUTUBE = listOf(
