@@ -24,6 +24,8 @@ import android.widget.GridView
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.Locale
 
 class MainActivity : Activity(), TextToSpeech.OnInitListener {
@@ -44,6 +46,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private lateinit var shelfKicker: TextView
     private lateinit var shelfName: TextView
     private lateinit var stats: TextView
+    private lateinit var weatherView: TextView
     private lateinit var wordWelcome: TextView
     private lateinit var wordJacob: TextView
     private lateinit var wordStatus: TextView
@@ -88,6 +91,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         shelfKicker = findViewById(R.id.shelfKicker)
         shelfName = findViewById(R.id.shelfName)
         stats = findViewById(R.id.stats)
+        weatherView = findViewById(R.id.weather)
         wordWelcome = findViewById(R.id.wordWelcome)
         wordJacob = findViewById(R.id.wordJacob)
         wordStatus = findViewById(R.id.wordStatus)
@@ -645,6 +649,36 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         val link = linkLabel()
         stats.text = String.format(Locale.US, "%.1f GB FREE  ·  %d MB  ·  %s", freeGb, mem.availMem / (1024 * 1024), link)
         findViewById<TextView>(R.id.chipLink).text = link
+        refreshWeather()
+    }
+
+    private fun refreshWeather() {
+        Thread {
+            val line = runCatching {
+                val url = URL("https://api.open-meteo.com/v1/forecast?latitude=39.96&longitude=-84.18&current=temperature_2m,weather_code&temperature_unit=fahrenheit")
+                val conn = url.openConnection() as HttpURLConnection
+                conn.connectTimeout = 4000
+                conn.readTimeout = 4000
+                val body = conn.inputStream.bufferedReader().use { it.readText() }
+                conn.disconnect()
+                val temp = Regex("\"temperature_2m\":(-?[0-9.]+)").find(body)?.groupValues?.get(1)?.toDoubleOrNull()
+                    ?: return@runCatching ""
+                val code = Regex("\"weather_code\":(\\d+)").find(body)?.groupValues?.get(1)?.toIntOrNull() ?: -1
+                "${temp.toInt()}° ${weatherName(code)}"
+            }.getOrDefault("")
+            if (line.isNotEmpty()) runOnUiThread { if (!isFinishing) weatherView.text = line }
+        }.start()
+    }
+
+    private fun weatherName(code: Int): String = when (code) {
+        0 -> "CLEAR"
+        in 1..3 -> "CLOUDY"
+        in 45..48 -> "FOG"
+        in 51..67 -> "RAIN"
+        in 71..77 -> "SNOW"
+        in 80..82 -> "SHOWERS"
+        in 95..99 -> "STORM"
+        else -> "WEATHER"
     }
 
     private fun linkLabel(): String {
