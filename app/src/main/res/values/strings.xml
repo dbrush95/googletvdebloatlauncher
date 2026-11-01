@@ -27,4 +27,9 @@
     <string name="remove_dock">Remove from dock</string>
     <string name="pin_dock">Pin to dock</string>
     <string name="app_info">App info</string>
+    <string name="wall">Wall</string>
+    <string name="debloat">Debloat</string>
+    <string name="debloat_body">Recommendation rows are already hidden on this home. Disable stops them from running. Nothing is uninstalled. If the TV refuses, run tools/debloat.sh from a computer. tools/restore.sh puts them back.</string>
+    <string name="debloat_run">Disable bloat on this TV</string>
+    <string name="add_app">Add</string>
 </resources>

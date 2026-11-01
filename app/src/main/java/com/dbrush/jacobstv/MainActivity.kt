@@ -6,6 +6,9 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ResolveInfo
+import android.media.AudioManager
+import android.media.MediaPlayer
+import android.media.ToneGenerator
 import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Bundle
@@ -18,6 +21,7 @@ import android.speech.tts.TextToSpeech
 import android.view.KeyEvent
 import android.view.View
 import android.widget.GridView
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import java.util.Locale
@@ -50,6 +54,10 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private lateinit var menuRemove: View
     private lateinit var menuPin: View
     private lateinit var libraryAdapter: AppsAdapter
+    private lateinit var wallpaper: ImageView
+    private lateinit var debloat: View
+    private lateinit var debloatBody: TextView
+    private var voice: MediaPlayer? = null
     private var tts: TextToSpeech? = null
     private var ttsReady = false
     private var pendingSpeak = false
@@ -70,6 +78,9 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         about = findViewById(R.id.about)
         library = findViewById(R.id.library)
         menu = findViewById(R.id.menu)
+        debloat = findViewById(R.id.debloat)
+        debloatBody = findViewById(R.id.debloatBody)
+        wallpaper = findViewById(R.id.wallpaper)
         dream = findViewById(R.id.dream)
         dreamClock = findViewById(R.id.dreamClock)
         dock = findViewById(R.id.dock)
@@ -111,6 +122,12 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             setOnClickListener { showAbout() }
             setOnFocusChangeListener { _, focused -> if (focused) showShelf(getString(R.string.about), getString(R.string.focused)) }
         }
+        findViewById<View>(R.id.chipWall).setOnClickListener { cycleWall() }
+        findViewById<View>(R.id.chipDebloat).setOnClickListener { showDebloat() }
+        findViewById<View>(R.id.debloatRun).setOnClickListener { tryDebloat() }
+        findViewById<View>(R.id.debloatClose).setOnClickListener { hideDebloat() }
+        debloat.setOnClickListener { hideDebloat() }
+        applyWall(prefs.getString(KEY_WALL, "rocket") ?: "rocket")
         findViewById<View>(R.id.chipInputs).setOnFocusChangeListener { _, focused ->
             if (focused) showShelf(getString(R.string.inputs), getString(R.string.focused))
         }
@@ -139,6 +156,8 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
+        voice?.release()
+        voice = null
         tts?.stop()
         tts?.shutdown()
         tts = null
@@ -167,6 +186,10 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
         if (menu.visibility == View.VISIBLE && back) {
             hideMenu()
+            return true
+        }
+        if (debloat.visibility == View.VISIBLE && back) {
+            hideDebloat()
             return true
         }
         if (library.visibility == View.VISIBLE && back) {
@@ -216,6 +239,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         return welcome.visibility != View.VISIBLE &&
             about.visibility != View.VISIBLE &&
             menu.visibility != View.VISIBLE &&
+            debloat.visibility != View.VISIBLE &&
             library.visibility != View.VISIBLE &&
             dream.visibility != View.VISIBLE
     }
@@ -236,6 +260,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         markSeen()
         about.visibility = View.GONE
         menu.visibility = View.GONE
+        debloat.visibility = View.GONE
         library.visibility = View.GONE
         dream.visibility = View.GONE
         welcome.visibility = View.VISIBLE
@@ -248,12 +273,45 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         wordWelcome.animate().alpha(1f).setStartDelay(360).setDuration(420).start()
         wordJacob.animate().alpha(1f).translationY(0f).setStartDelay(780).setDuration(520).start()
         wordStatus.animate().alpha(1f).setStartDelay(1280).setDuration(380).start()
-        if (ttsReady) speak() else pendingSpeak = true
+        speak()
         handler.postDelayed(endWelcome, 4300)
     }
 
     private fun speak() {
-        tts?.speak(getString(R.string.tts_welcome), TextToSpeech.QUEUE_FLUSH, null, "welcome")
+        if (playVoice()) return
+        if (ttsReady) tts?.speak(getString(R.string.tts_welcome), TextToSpeech.QUEUE_FLUSH, null, "welcome")
+        else pendingSpeak = true
+    }
+
+    private fun playVoice(): Boolean {
+        chirp()
+        voice?.release()
+        val player = MediaPlayer.create(this, R.raw.welcome) ?: return false
+        voice = player
+        player.setOnCompletionListener {
+            if (voice == it) voice = null
+            it.release()
+        }
+        player.start()
+        return true
+    }
+
+    private fun chirp() {
+        runCatching {
+            val tone = ToneGenerator(AudioManager.STREAM_MUSIC, 50)
+            tone.startTone(ToneGenerator.TONE_PROP_ACK, 160)
+            handler.postDelayed({
+                tone.startTone(ToneGenerator.TONE_PROP_BEEP, 90)
+                handler.postDelayed({ tone.release() }, 200)
+            }, 180)
+        }
+    }
+
+    private fun stopVoice() {
+        runCatching { voice?.stop() }
+        voice?.release()
+        voice = null
+        tts?.stop()
     }
 
     private fun finishWelcome() {
@@ -261,7 +319,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         closingWelcome = true
         handler.removeCallbacks(endWelcome)
         pendingSpeak = false
-        tts?.stop()
+        stopVoice()
         welcome.animate().alpha(0f).setDuration(280).withEndAction {
             welcome.visibility = View.GONE
             welcome.alpha = 1f
@@ -490,6 +548,22 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             }
             dock.addView(tile)
         }
+        val add = TextView(this)
+        add.text = getString(R.string.add_app)
+        add.setTextColor(resources.getColor(R.color.gold))
+        add.textSize = 18f
+        add.gravity = android.view.Gravity.CENTER
+        add.setBackgroundResource(R.drawable.bg_tile)
+        add.isFocusable = true
+        add.isClickable = true
+        val addWidth = (128 * resources.displayMetrics.density).toInt()
+        val addHeight = (96 * resources.displayMetrics.density).toInt()
+        add.layoutParams = LinearLayout.LayoutParams(addWidth, addHeight)
+        add.setOnClickListener { showLibrary() }
+        add.setOnFocusChangeListener { _, focused ->
+            if (focused) showShelf(getString(R.string.add_app), getString(R.string.all_apps))
+        }
+        dock.addView(add)
     }
 
     private fun focusDock() {
@@ -503,6 +577,57 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private fun showShelf(label: String, kicker: String) {
         shelfName.text = label.uppercase(Locale.US)
         shelfKicker.text = kicker
+    }
+
+    private fun applyWall(id: String) {
+        prefs.edit().putString(KEY_WALL, id).apply()
+        when (id) {
+            "coast" -> wallpaper.setImageResource(R.drawable.bg_coast)
+            "void" -> wallpaper.setImageDrawable(null)
+            else -> wallpaper.setImageResource(R.drawable.bg_rocket)
+        }
+    }
+
+    private fun cycleWall() {
+        val order = listOf("rocket", "coast", "void")
+        val current = prefs.getString(KEY_WALL, "rocket") ?: "rocket"
+        val next = order[(order.indexOf(current) + 1).mod(order.size)]
+        applyWall(next)
+        val label = when (next) {
+            "coast" -> "COAST"
+            "void" -> "VOID"
+            else -> "ROCKET"
+        }
+        showShelf(label, getString(R.string.wall))
+    }
+
+    private fun showDebloat() {
+        debloatBody.text = getString(R.string.debloat_body)
+        debloat.visibility = View.VISIBLE
+        findViewById<View>(R.id.debloatRun).requestFocus()
+    }
+
+    private fun hideDebloat() {
+        debloat.visibility = View.GONE
+        focusDock()
+    }
+
+    private fun tryDebloat() {
+        debloatBody.text = "Working."
+        Thread {
+            val lines = DEBLOAT.map { pkg ->
+                val code = runCatching {
+                    Runtime.getRuntime().exec(arrayOf("pm", "disable-user", "--user", "0", pkg)).waitFor()
+                }.getOrDefault(1)
+                if (code == 0) "disabled $pkg" else "blocked $pkg"
+            }
+            val text = if (lines.none { it.startsWith("disabled") }) {
+                "This TV blocked the disable. Nothing was uninstalled. From a computer, with USB debugging on, run tools/debloat.sh. tools/restore.sh puts them back."
+            } else {
+                lines.joinToString("\n")
+            }
+            runOnUiThread { if (!isFinishing) debloatBody.text = text }
+        }.start()
     }
 
     private fun refreshStats() {
@@ -561,6 +686,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     companion object {
         private const val KEY_SEEN = "welcomeSeenAt"
         private const val KEY_DOCK = "dock"
+        private const val KEY_WALL = "wall"
         private val PREFERRED = listOf(
             "com.netflix.ninja",
             "com.google.android.youtube.tv",
@@ -576,7 +702,18 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             "com.google.android.tvrecommendations",
             "com.google.android.tvlauncher",
             "com.google.android.apps.tv.launcherx",
+            "com.google.android.leanbacklauncher",
+            "com.google.android.backdrop",
+            "com.google.android.apps.tv.dreamx",
             "com.google.android.tungsten.setupwraith",
+        )
+        private val DEBLOAT = listOf(
+            "com.google.android.tvrecommendations",
+            "com.google.android.apps.tv.launcherx",
+            "com.google.android.tvlauncher",
+            "com.google.android.leanbacklauncher",
+            "com.google.android.backdrop",
+            "com.google.android.apps.tv.dreamx",
         )
     }
 }

@@ -4,6 +4,19 @@
     android:layout_height="match_parent"
     android:background="@color/bg">
 
+    <ImageView
+        android:id="@+id/wallpaper"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/wall"
+        android:scaleType="centerCrop"
+        android:src="@drawable/bg_rocket" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_scrim" />
+
     <LinearLayout
         android:id="@+id/home"
         android:layout_width="match_parent"
@@ -135,6 +148,18 @@
                 style="@style/HudChip"
                 android:layout_marginEnd="8dp"
                 android:text="@string/settings" />
+
+            <TextView
+                android:id="@+id/chipWall"
+                style="@style/HudChip"
+                android:layout_marginEnd="8dp"
+                android:text="@string/wall" />
+
+            <TextView
+                android:id="@+id/chipDebloat"
+                style="@style/HudChip"
+                android:layout_marginEnd="8dp"
+                android:text="@string/debloat" />
 
             <TextView
                 android:id="@+id/chipAbout"
@@ -289,6 +314,61 @@
                 style="@style/HudChip"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="0"
+                android:text="@string/close" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/debloat"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#CC05070B"
+        android:clickable="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="48dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="28dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.36"
+                android:text="@string/debloat"
+                android:textColor="@color/cyan"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/debloatBody"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:lineSpacingExtra="4dp"
+                android:text="@string/debloat_body"
+                android:textColor="@color/fg"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/debloatRun"
+                style="@style/HudChip"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="18dp"
+                android:layout_weight="0"
+                android:text="@string/debloat_run" />
+
+            <TextView
+                android:id="@+id/debloatClose"
+                style="@style/HudChip"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
                 android:layout_marginTop="8dp"
                 android:layout_weight="0"
                 android:text="@string/close" />

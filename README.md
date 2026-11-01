@@ -20,6 +20,25 @@ The home shape — dock, shelf, all-apps, inputs, a drifting clock — follows t
 - After a few quiet minutes the clock drifts so it does not burn a mark. Any key wakes it.
 - The welcome plays again when you come home after more than 4 minutes. Set `welcomeAfterMs` to `0` in `MainActivity` if you want it on every return.
 
+## Debloat
+
+The home already hides recommendation rows and the stock launcher tiles. To stop those packages from running, with USB debugging on and Jacob's TV already chosen as Home:
+
+```sh
+adb connect TV_IP:5555
+tools/debloat.sh
+```
+
+That runs `pm disable-user`. It does not uninstall. `tools/restore.sh` turns the same packages back on. Stock launchers are skipped until Jacob's TV owns Home.
+
+## Backgrounds
+
+Wall cycles Rocket (default), Coast, and Void. The rocket is the launch photograph, with the phone chrome removed.
+
+## Welcome
+
+The boot plays a short tone, then a voice: "Welcome, Jacob."
+
 ## Install on a Vizio that runs Android TV
 
 Older Vizio SmartCast sets are not Android and cannot sideload this. This is for a Vizio that has Android TV or Google TV, with Developer options.
