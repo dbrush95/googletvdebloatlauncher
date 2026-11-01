@@ -33,16 +33,10 @@ class AppsAdapter(
         val entry = items[position]
         view.findViewById<ImageView>(R.id.icon).setImageDrawable(entry.icon)
         view.findViewById<TextView>(R.id.label).text = entry.label
-        view.isFocusable = true
-        view.isClickable = true
-        view.setOnClickListener { onOpen(entry) }
-        if (onHold != null) {
-            view.isLongClickable = true
-            view.setOnLongClickListener {
-                onHold.invoke(entry)
-                true
-            }
-        }
+        view.isFocusable = false
+        view.isClickable = false
+        view.setOnClickListener(null)
+        view.setOnLongClickListener(null)
         return view
     }
 }

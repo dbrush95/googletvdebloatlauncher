@@ -43,6 +43,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
     private val handler = Handler(Looper.getMainLooper())
     private val prefs by lazy { getSharedPreferences("jacobstv", MODE_PRIVATE) }
+    private lateinit var home: View
     private lateinit var welcome: View
     private lateinit var about: View
     private lateinit var library: View
@@ -87,6 +88,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        home = findViewById(R.id.home)
         welcome = findViewById(R.id.welcome)
         about = findViewById(R.id.about)
         library = findViewById(R.id.library)
@@ -132,12 +134,29 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         findViewById<View>(R.id.debloatRestore).setOnClickListener { tryRestore() }
         findViewById<View>(R.id.debloatClose).setOnClickListener { hideDebloat() }
         debloat.setOnClickListener { hideDebloat() }
-        findViewById<View>(R.id.clockHit).setOnClickListener { expand(control); findViewById<View>(R.id.controlInputs).requestFocus() }
+        findViewById<View>(R.id.clockHit).setOnClickListener {
+            coverHome()
+            expand(control)
+            findViewById<View>(R.id.controlInputs).requestFocus()
+        }
         findViewById<View>(R.id.controlInputs).setOnClickListener { control.visibility = View.GONE; showInputEditor() }
-        findViewById<View>(R.id.controlLink).setOnClickListener { control.visibility = View.GONE; openWifi() }
+        findViewById<View>(R.id.controlLink).setOnClickListener {
+            control.visibility = View.GONE
+            revealHome()
+            openWifi()
+        }
         findViewById<View>(R.id.controlSettings).setOnClickListener { control.visibility = View.GONE; showAbout() }
-        findViewById<View>(R.id.controlCast).setOnClickListener { control.visibility = View.GONE; openCast() }
-        findViewById<View>(R.id.controlWall).setOnClickListener { control.visibility = View.GONE; cycleWall() }
+        findViewById<View>(R.id.controlCast).setOnClickListener {
+            control.visibility = View.GONE
+            revealHome()
+            openCast()
+        }
+        findViewById<View>(R.id.controlWall).setOnClickListener {
+            control.visibility = View.GONE
+            revealHome()
+            cycleWall()
+            focusDock()
+        }
         findViewById<View>(R.id.controlDebloat).setOnClickListener { control.visibility = View.GONE; showDebloat() }
         val zipField = findViewById<EditText>(R.id.zipField)
         zipField.setText(prefs.getString(KEY_ZIP, "45414"))
@@ -149,7 +168,11 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             refreshWeather()
         }
         findViewById<View>(R.id.controlCard).setOnClickListener { }
-        control.setOnClickListener { control.visibility = View.GONE }
+        control.setOnClickListener {
+            control.visibility = View.GONE
+            revealHome()
+            focusDock()
+        }
         applyWall(prefs.getString(KEY_WALL, "rocket") ?: "rocket")
         menuMoveLeft.setOnClickListener { nudgeMenu(-1) }
         menuMoveRight.setOnClickListener { nudgeMenu(1) }
@@ -165,6 +188,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         super.onResume()
         refreshStats()
         refreshApps()
+        revealHome()
         if (welcome.visibility != View.VISIBLE && shouldGreet()) playWelcome()
         bumpIdle()
     }
@@ -214,6 +238,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
         if (control.visibility == View.VISIBLE && back) {
             control.visibility = View.GONE
+            revealHome()
             focusDock()
             return true
         }
@@ -362,23 +387,40 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
     private fun hideAbout() {
         about.visibility = View.GONE
+        revealHome()
         focusDock()
     }
 
+    private fun coverHome() {
+        home.visibility = View.INVISIBLE
+    }
+
+    private fun revealHome() {
+        val covered = library.visibility == View.VISIBLE ||
+            control.visibility == View.VISIBLE ||
+            about.visibility == View.VISIBLE ||
+            menu.visibility == View.VISIBLE ||
+            debloat.visibility == View.VISIBLE ||
+            welcome.visibility == View.VISIBLE ||
+            dream.visibility == View.VISIBLE
+        if (!covered) home.visibility = View.VISIBLE
+    }
+
     private fun showLibrary() {
+        coverHome()
         library.visibility = View.VISIBLE
-        library.translationY = 80f
-        library.animate().translationY(0f).setDuration(220).start()
+        library.translationY = 40f
+        library.animate().translationY(0f).setDuration(180).start()
         grid.setSelection(0)
         grid.post {
-            val first = grid.getChildAt(0)
-            if (first != null) first.requestFocus() else grid.requestFocus()
+            grid.setSelection(0)
+            grid.requestFocus()
         }
-        showShelf(getString(R.string.all_apps), getString(R.string.all_apps))
     }
 
     private fun hideLibrary() {
         library.visibility = View.GONE
+        revealHome()
         focusDock()
     }
 
@@ -425,6 +467,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private fun hideMenu() {
         menu.visibility = View.GONE
         menuEntry = null
+        revealHome()
         if (library.visibility == View.VISIBLE) grid.requestFocus() else focusDock()
     }
 
@@ -508,7 +551,11 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         val root = window.decorView as ViewGroup
         val layer = android.widget.FrameLayout(this)
         layer.setBackgroundColor(0x6605070B.toInt())
-        layer.setOnClickListener { root.removeView(layer) }
+        layer.setOnClickListener {
+            root.removeView(layer)
+            revealHome()
+            focusDock()
+        }
         val card = LinearLayout(this)
         card.orientation = LinearLayout.VERTICAL
         card.setBackgroundResource(R.drawable.bg_card)
@@ -881,6 +928,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
     private fun hideDebloat() {
         debloat.visibility = View.GONE
+        revealHome()
         focusDock()
     }
 
@@ -1028,14 +1076,9 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private fun appIcon(pm: PackageManager, info: ResolveInfo): Drawable {
         val activity = info.activityInfo
         PACK[activity.packageName]?.let { return markIcon(it) }
-        val loaded = listOfNotNull(
-            runCatching { if (activity.icon != 0) activity.loadIcon(pm) else null }.getOrNull(),
-            runCatching { if (activity.applicationInfo.icon != 0) activity.applicationInfo.loadIcon(pm) else null }.getOrNull(),
-            runCatching { info.loadIcon(pm) }.getOrNull(),
-        ).firstOrNull { it.intrinsicWidth > 0 && it.intrinsicHeight > 0 }
-        if (loaded != null) return loaded
         val label = info.loadLabel(pm)?.toString()?.takeIf { it.isNotBlank() } ?: activity.packageName
-        return markIcon(Mark(label.take(2).uppercase(Locale.US), 0xFF5FD0E6.toInt()))
+        val text = label.filter { it.isLetterOrDigit() }.take(2).uppercase(Locale.US).ifBlank { "•" }
+        return markIcon(Mark(text, 0xFF5FD0E6.toInt()))
     }
 
     private fun markIcon(mark: Mark): Drawable {
