@@ -54,7 +54,7 @@ jobs:
           tag_name: tv
           name: Home
           body: |
-            Sideload `home.apk` on the Vizio.
+            Sideload `home.apk` on Google TV or Android TV.
             It is signed with the CI debug key, which is enough for a personal launcher.
             Replacing this release replaces the file at the same download URL.
           files: home.apk

@@ -9,7 +9,7 @@
     <string name="tts_welcome">Welcome home.</string>
     <string name="about_kicker">SETTINGS</string>
     <string name="about_line">Dallas built this because Dallas kicks ass\ngithub.com/dbrush95/googletvdebloatlauncher</string>
-    <string name="about_body">A Stark-styled home for this Vizio. Dock on the bottom, the focused app in big type, inputs up front, and a clock that drifts so it does not burn in. No recommendation rows. No ads.</string>
+    <string name="about_body">A Stark-styled home for Google TV and Android TV. Dock on the bottom, the focused app in big type, inputs up front, and a clock that drifts so it does not burn in. No recommendation rows. No ads.</string>
     <string name="replay">Replay welcome</string>
     <string name="close">Close</string>
     <string name="settings">Settings</string>

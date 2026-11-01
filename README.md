@@ -1,12 +1,12 @@
 # Home
 
-Low-bloat Google TV launcher, drawn like a Stark HUD. Variant of the Jacob's TV home, published at [dbrush95/googletvdebloatlauncher](https://github.com/dbrush95/googletvdebloatlauncher).
+Low-bloat home for Google TV and Android TV, drawn like a Stark HUD. It is not tied to one brand. The same APK is the home screen on Google TV and Android TV sets. Published at [dbrush95/googletvdebloatlauncher](https://github.com/dbrush95/googletvdebloatlauncher).
 
 When the set wakes, the arc reactor comes up and the TV says **Welcome home.** The home under it stays out of the way: a dock of favorites, the focused name in large type, inputs, link status, settings, and every installed app one click down. Recommendation rows and the stock launcher tiles are not on this grid. Nothing here is uninstalled.
 
 About says: Dallas built this because Dallas kicks ass. github.com/dbrush95/googletvdebloatlauncher
 
-The home shape — dock, shelf, all-apps, inputs, a drifting clock — follows the idea in [CleanYourTV](https://github.com/Gathin23/cleanyourtv). The look, the welcome, and this app are not that project. This build does not disable packages. Hiding a tile is not the same as `pm disable-user`.
+The home shape — dock, shelf, all-apps, inputs, a drifting clock — follows the idea in [CleanYourTV](https://github.com/Gathin23/cleanyourtv). The look and the welcome are this build. Once it is the Home app it can disable the stock recommendation and launcher packages. Restore turns that pass back on.
 
 ## What the remote does
 
@@ -39,16 +39,16 @@ Wall cycles Rocket (default), Coast, and Void. The rocket is the launch photogra
 
 The boot plays a short tone, then a voice: "Welcome home."
 
-## Install on a Vizio that runs Android TV
+## Install on Google TV or Android TV
 
-Older Vizio SmartCast sets are not Android and cannot sideload this. This is for a Vizio that has Android TV or Google TV, with Developer options.
+This is for any set that runs Google TV or Android TV, with Developer options. Sets that are not Android cannot sideload it.
 
 1. On the TV: Settings → Device Preferences → About → press OK on Build seven times. Open Developer options and turn on USB debugging. Turn on Network debugging if you see it.
-2. This repo builds `jacobs-tv.apk` in Actions and attaches it to the `tv` release.
-3. Download that APK while signed in (the repo is private). Send it to the TV with Send files to TV, or `adb install -r jacobs-tv.apk`.
+2. This repo builds `home.apk` in Actions and attaches it to the `tv` release.
+3. Download that APK. Send it to the TV with Send files to TV, or `adb install -r home.apk`.
 4. Open Home once. Press Home. Pick Home and choose Always.
 
-The launcher does not need an account, does not use the internet, and only checks whether Wi-Fi or Ethernet is up so the Link chip can say so.
+The launcher does not need an account. Weather and the built-in browser use the network when you open them. The Link chip only checks whether Wi-Fi or Ethernet is up.
 
 ## Build
 
