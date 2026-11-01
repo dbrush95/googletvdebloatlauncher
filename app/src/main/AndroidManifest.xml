@@ -31,7 +31,8 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.JacobsTv">
+        android:theme="@style/Theme.JacobsTv"
+        android:usesCleartextTraffic="true">
 
         <activity
             android:name=".MainActivity"
@@ -45,5 +46,9 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".BrowserActivity"
+            android:exported="false" />
     </application>
 </manifest>

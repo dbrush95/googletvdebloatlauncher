@@ -144,8 +144,8 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         applyWall(prefs.getString(KEY_WALL, "rocket") ?: "rocket")
         menuMoveLeft.setOnClickListener { nudgeMenu(-1) }
         menuMoveRight.setOnClickListener { nudgeMenu(1) }
-        menuRemove.setOnClickListener { menuEntry?.component?.packageName?.let { unpin(it) } }
-        menuPin.setOnClickListener { menuEntry?.component?.packageName?.let { pin(it) } }
+        menuRemove.setOnClickListener { menuEntry?.let { unpin(dockKey(it)) } }
+        menuPin.setOnClickListener { menuEntry?.let { pin(dockKey(it)) } }
         findViewById<View>(R.id.menuInfo).setOnClickListener { menuEntry?.let { openInfo(it) } }
         findViewById<View>(R.id.menuClose).setOnClickListener { hideMenu() }
         menu.setOnClickListener { hideMenu() }
@@ -410,8 +410,13 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         if (library.visibility == View.VISIBLE) grid.requestFocus() else focusDock()
     }
 
+    private fun dockKey(entry: AppEntry): String {
+        if (entry.kind == TileKind.BROWSER) return "app:browser"
+        return entry.component?.packageName ?: ""
+    }
+
     private fun nudgeMenu(dir: Int) {
-        val pkg = menuEntry?.component?.packageName ?: return
+        val pkg = menuEntry?.let { dockKey(it) } ?: return
         val index = dockPkgs.indexOf(pkg)
         val next = index + dir
         if (index < 0 || next < 0 || next >= dockPkgs.size) return
@@ -424,7 +429,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     }
 
     private fun pin(pkg: String) {
-        if (pkg in dockPkgs || dockPkgs.size >= 7) {
+        if (pkg in dockPkgs || dockPkgs.size >= 8) {
             hideMenu()
             return
         }
@@ -447,7 +452,24 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             TileKind.ABOUT -> showAbout()
             TileKind.SETTINGS -> openSettings()
             TileKind.APP -> launch(entry.component)
+            TileKind.BROWSER -> openBrowser()
         }
+    }
+
+    private fun openBrowser() {
+        val installed = listOf(
+            "com.android.chrome",
+            "com.google.android.apps.chrome",
+            "org.mozilla.tv.firefox",
+            "org.mozilla.firefox",
+            "com.brave.browser",
+        )
+        for (pkg in installed) {
+            val entry = apps.find { it.component?.packageName == pkg } ?: continue
+            launch(entry.component)
+            return
+        }
+        startActivity(Intent(this, BrowserActivity::class.java))
     }
 
     private fun openCast() {
@@ -631,8 +653,9 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             val next = queryApps()
             runOnUiThread {
                 if (gen != loadGen || isFinishing) return@runOnUiThread
-                apps = next
-                libraryAdapter.setItems(next)
+                val browser = AppEntry("Browser", TileKind.BROWSER, getDrawable(R.drawable.ic_web), null)
+                apps = listOf(browser) + next
+                libraryAdapter.setItems(apps)
                 ensureDock()
                 renderDock()
             }
@@ -646,9 +669,14 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             val preferred = PREFERRED.filter { it in installed }
             (preferred + installed.filter { it !in preferred }).take(4)
         } else {
-            saved.split(',').map { it.trim() }.filter { it in installed || it.startsWith("in:") }
+            saved.split(',').map { it.trim() }.filter { it in installed || it.startsWith("in:") || it == "app:browser" }
         }
         dockPkgs = chosen.toMutableList()
+        if ("app:browser" !in dockPkgs && !prefs.getBoolean(KEY_BROWSER, false) && dockPkgs.size < 8) {
+            dockPkgs.add("app:browser")
+            prefs.edit().putBoolean(KEY_BROWSER, true).apply()
+            saveDock()
+        }
         if (saved == null) saveDock()
     }
 
@@ -660,6 +688,26 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         dock.removeAllViews()
         val pad = (8 * resources.displayMetrics.density).toInt()
         for (pkg in dockPkgs) {
+            if (pkg == "app:browser") {
+                val tile = layoutInflater.inflate(R.layout.item_app, dock, false)
+                tile.findViewById<TextView>(R.id.label).text = "Browser"
+                tile.findViewById<android.widget.ImageView>(R.id.icon).setImageResource(R.drawable.ic_web)
+                tile.setBackgroundResource(R.drawable.bg_dock_item)
+                val width = (92 * resources.displayMetrics.density).toInt()
+                tile.layoutParams = LinearLayout.LayoutParams(width, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    marginEnd = pad
+                }
+                tile.setOnClickListener { openBrowser() }
+                tile.setOnLongClickListener {
+                    dockPkgs.remove(pkg)
+                    prefs.edit().putBoolean(KEY_BROWSER, true).apply()
+                    saveDock()
+                    renderDock()
+                    true
+                }
+                dock.addView(tile)
+                continue
+            }
             if (pkg.startsWith("in:")) {
                 val parts = pkg.removePrefix("in:").split("|")
                 val name = parts.getOrElse(0) { "Input" }
@@ -965,6 +1013,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         private const val KEY_ZIP = "zip"
         private const val KEY_INPUTS = "inputs"
         private const val KEY_QUIET = "quiet"
+        private const val KEY_BROWSER = "browserOffered"
         private val PREFERRED = listOf(
             "com.netflix.ninja",
             "com.google.android.youtube.tv",

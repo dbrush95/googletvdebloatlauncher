@@ -3,7 +3,7 @@ package com.dbrush.jacobstv
 import android.content.ComponentName
 import android.graphics.drawable.Drawable
 
-enum class TileKind { APP, SETTINGS, ABOUT }
+enum class TileKind { APP, SETTINGS, ABOUT, BROWSER }
 
 data class AppEntry(
     val label: String,
