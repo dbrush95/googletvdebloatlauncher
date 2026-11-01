@@ -117,8 +117,6 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         findViewById<View>(R.id.aboutCard).setOnClickListener { }
         welcome.setOnClickListener { finishWelcome() }
         dream.setOnClickListener { hideScreensaver() }
-        findViewById<View>(R.id.chipWall).setOnClickListener { cycleWall() }
-        findViewById<View>(R.id.chipDebloat).setOnClickListener { showDebloat() }
         findViewById<View>(R.id.debloatRun).setOnClickListener { tryDebloat() }
         findViewById<View>(R.id.debloatClose).setOnClickListener { hideDebloat() }
         debloat.setOnClickListener { hideDebloat() }
@@ -127,6 +125,8 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         findViewById<View>(R.id.controlLink).setOnClickListener { control.visibility = View.GONE; openWifi() }
         findViewById<View>(R.id.controlSettings).setOnClickListener { control.visibility = View.GONE; showAbout() }
         findViewById<View>(R.id.controlCast).setOnClickListener { control.visibility = View.GONE; openCast() }
+        findViewById<View>(R.id.controlWall).setOnClickListener { control.visibility = View.GONE; cycleWall() }
+        findViewById<View>(R.id.controlDebloat).setOnClickListener { control.visibility = View.GONE; showDebloat() }
         val zipField = findViewById<EditText>(R.id.zipField)
         zipField.setText(prefs.getString(KEY_ZIP, "45414"))
         findViewById<View>(R.id.zipSave).setOnClickListener {
@@ -453,11 +453,14 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     }
 
     private fun showInputEditor() {
-        val marks = listOf("PS5", "XBOX", "SWITCH", "PC", "CABLE", "DISC", "LIVE")
-        val raw = prefs.getString(KEY_INPUTS, "PS5|PS5,Xbox|XBOX,Switch|SWITCH,PC|PC,Cable|CABLE") ?: ""
-        val slots = raw.split(",").mapNotNull { item ->
+        val marks = listOf("ps5", "xbox", "switch", "pc", "cable", "disc", "live")
+        val ports = listOf("HDMI 1", "HDMI 2", "HDMI 3", "HDMI 4", "AV", "Tuner")
+        val raw = prefs.getString(KEY_INPUTS, "PS5|ps5|HDMI 1,Xbox|xbox|HDMI 2,Switch|switch|HDMI 3,PC|pc|HDMI 4,Cable|cable|AV") ?: ""
+        val slots = raw.split(",").mapIndexedNotNull { index, item ->
             val parts = item.split("|")
-            if (parts.size == 2) parts[0] to parts[1] else null
+            if (parts.size >= 2) {
+                Triple(parts[0], parts[1], parts.getOrNull(2) ?: ports[index % ports.size])
+            } else null
         }
         val root = window.decorView as ViewGroup
         val layer = android.widget.FrameLayout(this)
@@ -476,6 +479,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         card.addView(title)
         val names = mutableListOf<EditText>()
         val badges = mutableListOf<TextView>()
+        val portViews = mutableListOf<TextView>()
         slots.forEach { slot ->
             val row = LinearLayout(this)
             row.orientation = LinearLayout.HORIZONTAL
@@ -492,24 +496,32 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             name.setText(slot.first)
             name.setTextColor(resources.getColor(R.color.fg))
             name.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            val open = TextView(this)
-            open.text = "OPEN"
-            open.setTextColor(resources.getColor(R.color.fg))
-            open.setPadding(pad / 2, pad / 2, pad / 2, pad / 2)
-            open.setOnClickListener { openInputs() }
+            val port = TextView(this)
+            port.text = slot.third
+            port.setTextColor(resources.getColor(R.color.cyan))
+            port.setPadding(pad / 2, pad / 2, pad / 2, pad / 2)
+            port.setOnClickListener {
+                val index = ports.indexOf(port.text.toString())
+                port.text = ports[if (index < 0) 0 else (index + 1) % ports.size]
+            }
+            port.setOnLongClickListener {
+                openMappedInput(port.text.toString())
+                true
+            }
             row.addView(badge)
             row.addView(name)
-            row.addView(open)
+            row.addView(port)
             card.addView(row)
             names += name
             badges += badge
+            portViews += port
         }
         val done = TextView(this)
         done.text = "DONE"
         done.setTextColor(resources.getColor(R.color.gold))
         done.setPadding(0, pad, 0, 0)
         done.setOnClickListener {
-            val encoded = names.zip(badges).joinToString(",") { (name, badge) -> "${name.text}|${badge.text}" }
+            val encoded = names.indices.joinToString(",") { i -> "${names[i].text}|${badges[i].text}|${portViews[i].text}" }
             prefs.edit().putString(KEY_INPUTS, encoded).apply()
             root.removeView(layer)
         }
@@ -525,6 +537,18 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         root.addView(layer)
     }
 
+    private fun openMappedInput(label: String) {
+        val manager = getSystemService(TV_INPUT_SERVICE) as? android.media.tv.TvInputManager
+        val match = manager?.tvInputList?.firstOrNull { info ->
+            info.loadLabel(this)?.toString()?.contains(label, ignoreCase = true) == true
+        }
+        if (match != null) {
+            val uri = android.media.tv.TvContract.buildChannelUriForPassthroughInput(match.id)
+            val intent = Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            if (runCatching { startActivity(intent) }.isSuccess) return
+        }
+        openInputs()
+    }
     private fun openSettings() {
         runCatching {
             startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
@@ -662,7 +686,6 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         dock.post {
             val first = dock.getChildAt(0)
             if (first != null) first.requestFocus()
-            else findViewById<View>(R.id.chipWall).requestFocus()
         }
     }
 
