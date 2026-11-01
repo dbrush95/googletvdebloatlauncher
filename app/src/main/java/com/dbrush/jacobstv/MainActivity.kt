@@ -510,9 +510,17 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 openMappedInput(port.text.toString())
                 true
             }
+            val bar = TextView(this)
+            bar.text = "BAR"
+            bar.setTextColor(resources.getColor(R.color.gold))
+            bar.setPadding(pad / 2, pad / 2, pad / 2, pad / 2)
+            bar.setOnClickListener {
+                pinInput(name.text.toString(), badge.text.toString(), port.text.toString())
+            }
             row.addView(badge)
             row.addView(name)
             row.addView(port)
+            row.addView(bar)
             card.addView(row)
             names += name
             badges += badge
@@ -537,6 +545,14 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         cardParams.rightMargin = pad
         layer.addView(card, cardParams)
         root.addView(layer)
+    }
+
+    private fun pinInput(name: String, mark: String, port: String) {
+        val token = "in:${name.trim()}|$mark|$port"
+        if (token in dockPkgs || dockPkgs.size >= 9) return
+        dockPkgs.add(token)
+        saveDock()
+        renderDock()
     }
 
     private fun openMappedInput(label: String) {
@@ -629,7 +645,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             val preferred = PREFERRED.filter { it in installed }
             (preferred + installed.filter { it !in preferred }).take(4)
         } else {
-            saved.split(',').map { it.trim() }.filter { it in installed }
+            saved.split(',').map { it.trim() }.filter { it in installed || it.startsWith("in:") }
         }
         dockPkgs = chosen.toMutableList()
         if (saved == null) saveDock()
@@ -643,6 +659,35 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         dock.removeAllViews()
         val pad = (8 * resources.displayMetrics.density).toInt()
         for (pkg in dockPkgs) {
+            if (pkg.startsWith("in:")) {
+                val parts = pkg.removePrefix("in:").split("|")
+                val name = parts.getOrElse(0) { "Input" }
+                val mark = parts.getOrElse(1) { "live" }
+                val port = parts.getOrElse(2) { "HDMI 1" }
+                val tile = layoutInflater.inflate(R.layout.item_app, dock, false)
+                val icon = tile.findViewById<android.widget.ImageView>(R.id.icon)
+                val res = when (mark) {
+                    "ps5" -> R.drawable.logo_ps
+                    "xbox" -> R.drawable.logo_xbox
+                    else -> 0
+                }
+                if (res != 0) icon.setImageResource(res) else icon.setImageDrawable(null)
+                tile.findViewById<TextView>(R.id.label).text = name
+                tile.setBackgroundResource(R.drawable.bg_dock_item)
+                val width = (92 * resources.displayMetrics.density).toInt()
+                tile.layoutParams = LinearLayout.LayoutParams(width, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    marginEnd = pad
+                }
+                tile.setOnClickListener { openMappedInput(port) }
+                tile.setOnLongClickListener {
+                    dockPkgs.remove(pkg)
+                    saveDock()
+                    renderDock()
+                    true
+                }
+                dock.addView(tile)
+                continue
+            }
             val entry = apps.find { it.component?.packageName == pkg } ?: continue
             val tile = layoutInflater.inflate(R.layout.item_app, dock, false)
             tile.findViewById<android.widget.ImageView>(R.id.icon).setImageDrawable(entry.icon)

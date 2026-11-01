@@ -29,14 +29,9 @@
 
         <ImageView
             android:layout_width="168dp"
-            android:layout_height="36dp"
+            android:layout_height="28dp"
             android:layout_marginBottom="8dp"
-            android:background="@drawable/bg_brand_glass"
             android:contentDescription="Brush Industries"
-            android:paddingLeft="8dp"
-            android:paddingTop="5dp"
-            android:paddingRight="8dp"
-            android:paddingBottom="5dp"
             android:scaleType="fitStart"
             android:src="@drawable/brush_industries" />
 
@@ -428,14 +423,9 @@
 
             <ImageView
                 android:layout_width="250dp"
-                android:layout_height="52dp"
+                android:layout_height="42dp"
                 android:layout_marginBottom="12dp"
-                android:background="@drawable/bg_brand_glass"
                 android:contentDescription="Brush Industries"
-                android:paddingLeft="14dp"
-                android:paddingTop="8dp"
-                android:paddingRight="14dp"
-                android:paddingBottom="8dp"
                 android:scaleType="fitCenter"
                 android:src="@drawable/brush_industries" />
 
