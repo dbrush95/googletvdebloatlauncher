@@ -82,6 +82,8 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private var apps: List<AppEntry> = emptyList()
     private var dockPkgs: MutableList<String> = mutableListOf()
     private var menuEntry: AppEntry? = null
+    private lateinit var statusBar: View
+    private var movingKey: String? = null
     private var menuOnDock = false
     private var inputLayer: View? = null
     private var dismissInputs: ((Boolean) -> Unit)? = null
@@ -106,6 +108,10 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         dock = findViewById(R.id.dock)
         appsRow = findViewById(R.id.appsRow)
         inputsRow = findViewById(R.id.inputsRow)
+        statusBar = findViewById(R.id.statusBar)
+        findViewById<View>(R.id.clockHit).setOnFocusChangeListener { _, focused ->
+            if (focused) statusBar.animate().alpha(1f).setDuration(180).start()
+        }
         grid = findViewById(R.id.libraryGrid)
         shelfKicker = findViewById(R.id.shelfKicker)
         shelfName = findViewById(R.id.shelfName)
@@ -233,6 +239,19 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         if (inputLayer != null && back) {
             closeInputs(save = true)
             return true
+        }
+        if (movingKey != null) {
+            val left = event.keyCode == KeyEvent.KEYCODE_DPAD_LEFT
+            val right = event.keyCode == KeyEvent.KEYCODE_DPAD_RIGHT
+            if (back || ok) {
+                movingKey = null
+                showShelf("FAVORITES", "HOLD TO MOVE")
+                return true
+            }
+            if (left || right) {
+                slideFavorite(if (left) -1 else 1)
+                return true
+            }
         }
         if (about.visibility == View.VISIBLE && back) {
             hideAbout()
@@ -827,25 +846,19 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
     private fun renderDock() {
         dock.removeAllViews()
-        val pad = (8 * resources.displayMetrics.density).toInt()
         for (pkg in dockPkgs) {
             if (pkg == "app:browser") {
                 val tile = layoutInflater.inflate(R.layout.item_app, dock, false)
                 tile.findViewById<TextView>(R.id.label).text = "Browser"
                 tile.findViewById<android.widget.ImageView>(R.id.icon).setImageResource(R.drawable.ic_web)
-                tile.setBackgroundResource(R.drawable.bg_tile)
-                val width = (92 * resources.displayMetrics.density).toInt()
-                tile.layoutParams = LinearLayout.LayoutParams(width, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                    marginEnd = pad
-                }
+                placeCard(tile)
                 tile.setOnClickListener { openBrowser() }
                 tile.setOnLongClickListener {
-                    dockPkgs.remove(pkg)
-                    prefs.edit().putBoolean(KEY_BROWSER, true).apply()
-                    saveDock()
-                    renderHome()
+                    movingKey = pkg
+                    showShelf("MOVING", "ARROWS")
                     true
                 }
+                watchCard(tile, "Browser", "FAVORITES")
                 dock.addView(tile)
                 continue
             }
@@ -863,18 +876,14 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 }
                 if (res != 0) icon.setImageResource(res) else icon.setImageDrawable(null)
                 tile.findViewById<TextView>(R.id.label).text = name
-                tile.setBackgroundResource(R.drawable.bg_tile)
-                val width = (92 * resources.displayMetrics.density).toInt()
-                tile.layoutParams = LinearLayout.LayoutParams(width, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                    marginEnd = pad
-                }
+                placeCard(tile)
                 tile.setOnClickListener { openMappedInput(port) }
                 tile.setOnLongClickListener {
-                    dockPkgs.remove(pkg)
-                    saveDock()
-                    renderHome()
+                    movingKey = pkg
+                    showShelf(name, "MOVING")
                     true
                 }
+                watchCard(tile, name, "INPUT")
                 dock.addView(tile)
                 continue
             }
@@ -882,23 +891,14 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             val tile = layoutInflater.inflate(R.layout.item_app, dock, false)
             tile.findViewById<android.widget.ImageView>(R.id.icon).setImageDrawable(entry.icon)
             tile.findViewById<TextView>(R.id.label).text = entry.label
-            tile.setBackgroundResource(R.drawable.bg_tile)
-            tile.minimumHeight = 0
-            val tight = (6 * resources.displayMetrics.density).toInt()
-            tile.setPadding(tight, tight, tight, tight)
-            tile.findViewById<TextView>(R.id.label).textSize = 12f
-            val width = (92 * resources.displayMetrics.density).toInt()
-            tile.layoutParams = LinearLayout.LayoutParams(width, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                marginEnd = pad
-            }
+            placeCard(tile)
             tile.setOnClickListener { open(entry) }
             tile.setOnLongClickListener {
-                showMenu(entry, onDock = true)
+                movingKey = pkg
+                showShelf(entry.label, "MOVING")
                 true
             }
-            tile.setOnFocusChangeListener { _, focused ->
-                if (focused) showShelf(entry.label, getString(R.string.focused))
-            }
+            watchCard(tile, entry.label, "FAVORITES")
             dock.addView(tile)
         }
         wireRows()
@@ -923,15 +923,10 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             placeCard(tile)
             tile.setOnClickListener { open(entry) }
             tile.setOnLongClickListener {
-                showMenu(entry, onDock = false)
+                pin(dockKey(entry))
                 true
             }
-            tile.setOnFocusChangeListener { view, focused ->
-                if (focused) {
-                    showShelf(entry.label, "APPLICATIONS")
-                    view.requestRectangleOnScreen(android.graphics.Rect(0, 0, view.width, view.height), true)
-                }
-            }
+            watchCard(tile, entry.label, "APPLICATIONS")
             appsRow.addView(tile)
         }
     }
@@ -960,25 +955,45 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 showInputEditor()
                 true
             }
-            tile.setOnFocusChangeListener { view, focused ->
-                if (focused) {
-                    showShelf(slot.first, slot.third)
-                    view.requestRectangleOnScreen(android.graphics.Rect(0, 0, view.width, view.height), true)
-                }
-            }
+            watchCard(tile, slot.first, slot.third)
             inputsRow.addView(tile)
         }
     }
 
     private fun placeCard(tile: View) {
-        tile.setBackgroundResource(R.drawable.bg_tile)
         tile.isFocusable = true
         tile.isClickable = true
         if (tile.id == View.NO_ID) tile.id = View.generateViewId()
-        val width = (148 * resources.displayMetrics.density).toInt()
-        val gap = (12 * resources.displayMetrics.density).toInt()
+        val width = (220 * resources.displayMetrics.density).toInt()
+        val gap = (14 * resources.displayMetrics.density).toInt()
         tile.layoutParams = LinearLayout.LayoutParams(width, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
             marginEnd = gap
+        }
+    }
+
+    private fun watchCard(tile: View, label: String, kicker: String) {
+        tile.setOnFocusChangeListener { view, focused ->
+            view.animate().scaleX(if (focused) 1.08f else 1f).scaleY(if (focused) 1.08f else 1f).setDuration(140).start()
+            if (!focused) return@setOnFocusChangeListener
+            showShelf(if (movingKey != null) "MOVING" else label, if (movingKey != null) "ARROWS" else kicker)
+            statusBar.animate().alpha(0f).setDuration(180).start()
+            view.requestRectangleOnScreen(android.graphics.Rect(0, 0, view.width, view.height), true)
+        }
+    }
+
+    private fun slideFavorite(dir: Int) {
+        val key = movingKey ?: return
+        val index = dockPkgs.indexOf(key)
+        if (index < 0) return
+        val next = index + dir
+        if (next !in dockPkgs.indices) return
+        dockPkgs.removeAt(index)
+        dockPkgs.add(next, key)
+        saveDock()
+        renderHome()
+        dock.post {
+            dock.getChildAt(next)?.requestFocus()
+            showShelf("MOVING", "ARROWS")
         }
     }
 

@@ -36,6 +36,7 @@
             android:src="@drawable/brush_industries" />
 
         <LinearLayout
+            android:id="@+id/statusBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
@@ -163,6 +164,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
                     android:descendantFocusability="afterDescendants"
                     android:focusable="false"
                     android:scrollbars="none">
@@ -188,6 +191,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
                     android:descendantFocusability="afterDescendants"
                     android:focusable="false"
                     android:scrollbars="none">
@@ -213,6 +218,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false"
                     android:descendantFocusability="afterDescendants"
                     android:focusable="false"
                     android:scrollbars="none">

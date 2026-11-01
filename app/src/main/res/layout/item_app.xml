@@ -2,29 +2,36 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_tile"
+    android:background="@android:color/transparent"
     android:clickable="true"
     android:focusable="true"
-    android:gravity="center"
-    android:minHeight="132dp"
+    android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="0dp">
 
-    <ImageView
-        android:id="@+id/icon"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        android:importantForAccessibility="no"
-        android:scaleType="fitCenter" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="118dp"
+        android:background="@drawable/bg_tile"
+        android:duplicateParentState="true">
+
+        <ImageView
+            android:id="@+id/icon"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:scaleType="fitCenter" />
+    </FrameLayout>
 
     <TextView
         android:id="@+id/label"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="6dp"
         android:ellipsize="end"
         android:gravity="center"
-        android:maxLines="2"
+        android:maxLines="1"
         android:textColor="@color/fg"
-        android:textSize="16sp" />
+        android:textSize="13sp" />
 </LinearLayout>
