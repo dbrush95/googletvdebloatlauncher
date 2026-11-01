@@ -40,24 +40,24 @@ jobs:
           ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
 
       - name: Rename APK
-        run: mv app/build/outputs/apk/debug/app-debug.apk jacobs-tv.apk
+        run: mv app/build/outputs/apk/debug/app-debug.apk home.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: jacobs-tv
-          path: jacobs-tv.apk
+          name: home
+          path: home.apk
           if-no-files-found: error
 
       - name: Publish sideload APK
         uses: softprops/action-gh-release@v2
         with:
           tag_name: tv
-          name: Jacob's TV
+          name: Home
           body: |
-            Sideload `jacobs-tv.apk` on the Vizio.
+            Sideload `home.apk` on the Vizio.
             It is signed with the CI debug key, which is enough for a personal launcher.
             Replacing this release replaces the file at the same download URL.
-          files: jacobs-tv.apk
+          files: home.apk
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
