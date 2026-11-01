@@ -179,7 +179,10 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_dock"
                 android:orientation="horizontal"
-                android:padding="8dp" />
+                android:paddingStart="12dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="0dp" />
         </HorizontalScrollView>
     </LinearLayout>
 

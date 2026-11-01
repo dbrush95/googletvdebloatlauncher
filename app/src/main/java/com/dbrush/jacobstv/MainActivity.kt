@@ -534,7 +534,12 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             val tile = layoutInflater.inflate(R.layout.item_app, dock, false)
             tile.findViewById<android.widget.ImageView>(R.id.icon).setImageDrawable(entry.icon)
             tile.findViewById<TextView>(R.id.label).text = entry.label
-            val width = (128 * resources.displayMetrics.density).toInt()
+            tile.setBackgroundResource(R.drawable.bg_dock_item)
+            tile.minimumHeight = 0
+            val tight = (6 * resources.displayMetrics.density).toInt()
+            tile.setPadding(tight, tight, tight, tight)
+            tile.findViewById<TextView>(R.id.label).textSize = 12f
+            val width = (92 * resources.displayMetrics.density).toInt()
             tile.layoutParams = LinearLayout.LayoutParams(width, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
                 marginEnd = pad
             }
@@ -553,7 +558,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         add.setTextColor(resources.getColor(R.color.gold))
         add.textSize = 18f
         add.gravity = android.view.Gravity.CENTER
-        add.setBackgroundResource(R.drawable.bg_tile)
+        add.setBackgroundResource(R.drawable.bg_dock_item)
         add.isFocusable = true
         add.isClickable = true
         val addWidth = (128 * resources.displayMetrics.density).toInt()
