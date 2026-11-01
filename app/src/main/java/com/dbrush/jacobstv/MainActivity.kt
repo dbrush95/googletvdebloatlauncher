@@ -334,7 +334,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     }
 
     private fun showAbout() {
-        about.visibility = View.VISIBLE
+        expand(about)
         closeButton.requestFocus()
     }
 
@@ -393,6 +393,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         menuRemove.visibility = dockActions
         menuPin.visibility = if (onDock) View.GONE else View.VISIBLE
         menu.visibility = View.VISIBLE
+        expand(menu)
         (if (onDock) menuMoveLeft else menuPin).requestFocus()
     }
 
@@ -612,8 +613,16 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
     private fun showDebloat() {
         debloatBody.text = getString(R.string.debloat_body)
-        debloat.visibility = View.VISIBLE
+        expand(debloat)
         findViewById<View>(R.id.debloatRun).requestFocus()
+    }
+
+    private fun expand(view: View) {
+        view.visibility = View.VISIBLE
+        view.scaleX = 0.86f
+        view.scaleY = 0.86f
+        view.alpha = 0f
+        view.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(320).start()
     }
 
     private fun hideDebloat() {

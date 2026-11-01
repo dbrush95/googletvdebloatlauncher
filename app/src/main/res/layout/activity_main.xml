@@ -192,6 +192,17 @@
                 android:paddingEnd="12dp"
                 android:paddingBottom="0dp" />
         </HorizontalScrollView>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:letterSpacing="0.16"
+            android:text="@string/about_line"
+            android:textAllCaps="true"
+            android:textColor="@color/cyan"
+            android:textSize="11sp" />
     </LinearLayout>
 
     <FrameLayout
