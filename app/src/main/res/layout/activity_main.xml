@@ -63,8 +63,11 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/clockHit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="end"
                 android:orientation="vertical">
 
@@ -258,7 +261,7 @@
         android:id="@+id/menu"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#CC05070B"
+        android:background="#6605070B"
         android:clickable="true"
         android:visibility="gone">
 
@@ -346,7 +349,7 @@
         android:id="@+id/debloat"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#CC05070B"
+        android:background="#6605070B"
         android:clickable="true"
         android:visibility="gone">
 
@@ -489,7 +492,7 @@
         android:id="@+id/about"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#CC05070B"
+        android:background="#6605070B"
         android:clickable="true"
         android:visibility="gone">
 
@@ -561,6 +564,94 @@
                     android:textColor="@color/button_text"
                     android:textSize="16sp" />
             </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/control"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#4402070C"
+        android:clickable="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/controlCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="36dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:letterSpacing="0.36"
+                android:text="CONTROL"
+                android:textColor="@color/cyan"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/controlInputs"
+                style="@style/HudChip"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="16dp"
+                android:layout_weight="0"
+                android:text="@string/inputs" />
+
+            <TextView
+                android:id="@+id/controlLink"
+                style="@style/HudChip"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="0"
+                android:text="@string/link" />
+
+            <TextView
+                android:id="@+id/controlSettings"
+                style="@style/HudChip"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="0"
+                android:text="@string/settings" />
+
+            <EditText
+                android:id="@+id/zipField"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="16dp"
+                android:background="@android:color/transparent"
+                android:gravity="center"
+                android:hint="45414"
+                android:inputType="number"
+                android:maxLength="5"
+                android:textColor="@color/gold"
+                android:textColorHint="@color/muted"
+                android:textSize="22sp" />
+
+            <TextView
+                android:id="@+id/zipSave"
+                style="@style/HudChip"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="0"
+                android:text="SAVE ZIP" />
+
+            <TextView
+                android:id="@+id/controlClose"
+                style="@style/HudChip"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="0"
+                android:text="@string/close" />
         </LinearLayout>
     </FrameLayout>
 </FrameLayout>

@@ -20,6 +20,7 @@ import android.provider.Settings
 import android.speech.tts.TextToSpeech
 import android.view.KeyEvent
 import android.view.View
+import android.widget.EditText
 import android.widget.GridView
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -59,6 +60,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private lateinit var libraryAdapter: AppsAdapter
     private lateinit var wallpaper: ImageView
     private lateinit var debloat: View
+    private lateinit var control: View
     private lateinit var debloatBody: TextView
     private var voice: MediaPlayer? = null
     private var tts: TextToSpeech? = null
@@ -82,6 +84,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         library = findViewById(R.id.library)
         menu = findViewById(R.id.menu)
         debloat = findViewById(R.id.debloat)
+        control = findViewById(R.id.control)
         debloatBody = findViewById(R.id.debloatBody)
         wallpaper = findViewById(R.id.wallpaper)
         dream = findViewById(R.id.dream)
@@ -131,6 +134,22 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         findViewById<View>(R.id.debloatRun).setOnClickListener { tryDebloat() }
         findViewById<View>(R.id.debloatClose).setOnClickListener { hideDebloat() }
         debloat.setOnClickListener { hideDebloat() }
+        findViewById<View>(R.id.clockHit).setOnClickListener { expand(control); findViewById<View>(R.id.controlInputs).requestFocus() }
+        findViewById<View>(R.id.controlInputs).setOnClickListener { control.visibility = View.GONE; openInputs() }
+        findViewById<View>(R.id.controlLink).setOnClickListener { control.visibility = View.GONE; openWifi() }
+        findViewById<View>(R.id.controlSettings).setOnClickListener { control.visibility = View.GONE; openSettings() }
+        val zipField = findViewById<EditText>(R.id.zipField)
+        zipField.setText(prefs.getString(KEY_ZIP, "45414"))
+        findViewById<View>(R.id.zipSave).setOnClickListener {
+            val typed = zipField.text?.toString().orEmpty()
+            val next = if (typed.length == 5 && typed.all { it.isDigit() }) typed else "45414"
+            prefs.edit().putString(KEY_ZIP, next).apply()
+            zipField.setText(next)
+            refreshWeather()
+        }
+        findViewById<View>(R.id.controlClose).setOnClickListener { control.visibility = View.GONE }
+        control.setOnClickListener { control.visibility = View.GONE }
+        findViewById<View>(R.id.controlCard).setOnClickListener { }
         applyWall(prefs.getString(KEY_WALL, "rocket") ?: "rocket")
         findViewById<View>(R.id.chipInputs).setOnFocusChangeListener { _, focused ->
             if (focused) showShelf(getString(R.string.inputs), getString(R.string.focused))
@@ -664,7 +683,11 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private fun refreshWeather() {
         Thread {
             val line = runCatching {
-                val point = get("https://api.weather.gov/points/39.9637,-84.1797")
+                val zip = prefs.getString(KEY_ZIP, "45414") ?: "45414"
+                val geo = runCatching { get("https://api.zippopotam.us/us/$zip") }.getOrDefault("")
+                val lat = Regex("\"latitude\":\"([^\"]+)\"").find(geo)?.groupValues?.get(1) ?: "39.7589"
+                val lon = Regex("\"longitude\":\"([^\"]+)\"").find(geo)?.groupValues?.get(1) ?: "-84.1916"
+                val point = get("https://api.weather.gov/points/$lat,$lon")
                 val forecast = Regex("\"forecast\":\"(https:[^\"]+)\"").find(point)?.groupValues?.get(1)
                     ?: return@runCatching ""
                 val body = get(forecast)
@@ -733,11 +756,13 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         private const val KEY_SEEN = "welcomeSeenAt"
         private const val KEY_DOCK = "dock"
         private const val KEY_WALL = "wall"
+        private const val KEY_ZIP = "zip"
         private val PREFERRED = listOf(
             "com.netflix.ninja",
             "com.google.android.youtube.tv",
             "com.amazon.amazonvideo.livingroom",
             "com.disney.disneyplus",
+            "com.android.vending",
             "com.spotify.tv.android",
         )
         private val YOUTUBE = listOf(
